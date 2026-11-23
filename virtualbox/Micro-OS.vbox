@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<VirtualBox xmlns="http://www.virtualbox.org/" version="1.19-windows">
+  <Machine uuid="{25b03779-d089-4873-bc7f-4da58af415c1}" name="Micro-OS" OSType="Other" snapshotFolder="Snapshots" lastStateChange="2026-11-23T18:00:00Z">
+    <MediaRegistry>
+      <HardDisks/>
+      <DVDImages>
+        <Image uuid="{d6e6e819-f4f5-47b4-acc3-c7a28f82f9c1}" location="micro-os.iso"/>
+      </DVDImages>
+      <FloppyImages/>
+    </MediaRegistry>
+    <ExtraData>
+      <ExtraDataItem name="GUI/LastCloseAction" value="PowerOff"/>
+      <ExtraDataItem name="GUI/LastNormalWindowPosition" value="400,200,800,600"/>
+    </ExtraData>
+    <Hardware>
+      <CPU count="1">
+        <PAE enabled="false"/>
+        <LongMode enabled="false"/>
+        <HardwareVirtExLargePages enabled="true"/>
+      </CPU>
+      <Memory RAMSize="64"/>
+      <Boot>
+        <Order position="1" device="DVD"/>
+        <Order position="2" device="HardDisk"/>
+        <Order position="3" device="None"/>
+        <Order position="4" device="None"/>
+      </Boot>
+      <Display VRAMSize="16"/>
+      <BIOS>
+        <IOAPIC enabled="true"/>
+      </BIOS>
+      <UART>
+        <Port id="0" IOBase="0x3f8" IRQ="4" hostMode="RawFile" path="serial_trace.log" enabled="true"/>
+      </UART>
+    </Hardware>
+    <StorageControllers>
+      <StorageController name="IDE" type="PIIX4" PortCount="2" useHostIOCache="true" Bootable="true">
+        <AttachedDevice type="DVD" hotpluggable="false" port="0" device="0">
+          <Image uuid="{d6e6e819-f4f5-47b4-acc3-c7a28f82f9c1}"/>
+        </AttachedDevice>
+      </StorageController>
+    </StorageControllers>
+  </Machine>
+</VirtualBox>
