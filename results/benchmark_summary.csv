@@ -1,0 +1,10 @@
+Metric,RoundRobin,MLFQ
+TotalTicks,36,36
+ContextSwitches,14,11
+AvgResponseTime,3.50,1.75
+AvgWaitingTime,14.50,11.25
+AvgTurnaroundTime,23.50,20.25
+CpuUtilization,100.00,100.00
+FairnessIndex,0.9234,0.9412
+BoostEvents,0,1
+DemotionEvents,0,4

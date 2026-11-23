@@ -1,0 +1,28 @@
+[package]
+name = "micro-os"
+version = "0.1.0"
+edition = "2021"
+authors = ["CA-6 Systems Engineering Team"]
+description = "A modular educational Micro-OS implementing core OS mechanisms (Round Robin, MLFQ, Spinlocks, Free-List Allocator) in Rust"
+
+[features]
+default = ["std"]
+std = []
+baremetal = []
+
+[[bin]]
+name = "micro-os"
+path = "src/main.rs"
+
+[lib]
+name = "micro_os"
+path = "src/lib.rs"
+
+[profile.dev]
+opt-level = 0
+panic = "abort"
+
+[profile.release]
+opt-level = 3
+panic = "abort"
+lto = true

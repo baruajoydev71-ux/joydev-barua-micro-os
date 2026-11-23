@@ -1,0 +1,56 @@
+# Micro-OS Scheduler Trace: Round Robin (Quantum = 2)
+# Format: [TICK] EVENT task_id=... fields=...
+[000001] TASK_SWITCH prev=None next=1 name="Task-CPU1" prio=0 reason=PREEMPT_HIGHER_PRIORITY
+[000001] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=9 prio=0
+[000002] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=8 prio=0
+[000002] TASK_SWITCH prev=Some(1) next=2 name="Task-IO" prio=0 reason=QUANTUM_EXPIRED
+[000003] TASK_EXEC task_id=2 name="Task-IO" burst_rem=5 prio=0
+[000004] TASK_EXEC task_id=2 name="Task-IO" burst_rem=4 prio=0
+[000004] TASK_SWITCH prev=Some(2) next=3 name="Task-CPU2" prio=0 reason=TASK_BLOCKED
+[000005] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=11 prio=0
+[000006] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=10 prio=0
+[000006] TASK_SWITCH prev=Some(3) next=4 name="Task-Mixed" prio=0 reason=QUANTUM_EXPIRED
+[000007] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=7 prio=0
+[000008] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=6 prio=0
+[000008] TASK_SWITCH prev=Some(4) next=1 name="Task-CPU1" prio=0 reason=QUANTUM_EXPIRED
+[000009] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=7 prio=0
+[000010] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=6 prio=0
+[000010] TASK_SWITCH prev=Some(1) next=2 name="Task-IO" prio=0 reason=QUANTUM_EXPIRED
+[000011] TASK_EXEC task_id=2 name="Task-IO" burst_rem=3 prio=0
+[000012] TASK_EXEC task_id=2 name="Task-IO" burst_rem=2 prio=0
+[000012] TASK_SWITCH prev=Some(2) next=3 name="Task-CPU2" prio=0 reason=TASK_BLOCKED
+[000013] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=9 prio=0
+[000014] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=8 prio=0
+[000014] TASK_SWITCH prev=Some(3) next=4 name="Task-Mixed" prio=0 reason=QUANTUM_EXPIRED
+[000015] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=5 prio=0
+[000016] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=4 prio=0
+[000016] TASK_SWITCH prev=Some(4) next=1 name="Task-CPU1" prio=0 reason=QUANTUM_EXPIRED
+[000017] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=5 prio=0
+[000018] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=4 prio=0
+[000018] TASK_SWITCH prev=Some(1) next=2 name="Task-IO" prio=0 reason=QUANTUM_EXPIRED
+[000019] TASK_EXEC task_id=2 name="Task-IO" burst_rem=1 prio=0
+[000020] TASK_EXEC task_id=2 name="Task-IO" burst_rem=0 prio=0
+[000020] TASK_SWITCH prev=Some(2) next=3 name="Task-CPU2" prio=0 reason=TASK_TERMINATED
+[000021] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=7 prio=0
+[000022] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=6 prio=0
+[000022] TASK_SWITCH prev=Some(3) next=4 name="Task-Mixed" prio=0 reason=QUANTUM_EXPIRED
+[000023] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=3 prio=0
+[000024] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=2 prio=0
+[000024] TASK_SWITCH prev=Some(4) next=1 name="Task-CPU1" prio=0 reason=QUANTUM_EXPIRED
+[000025] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=3 prio=0
+[000026] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=2 prio=0
+[000026] TASK_SWITCH prev=Some(1) next=3 name="Task-CPU2" prio=0 reason=QUANTUM_EXPIRED
+[000027] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=5 prio=0
+[000028] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=4 prio=0
+[000028] TASK_SWITCH prev=Some(3) next=4 name="Task-Mixed" prio=0 reason=QUANTUM_EXPIRED
+[000029] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=1 prio=0
+[000030] TASK_EXEC task_id=4 name="Task-Mixed" burst_rem=0 prio=0
+[000030] TASK_SWITCH prev=Some(4) next=1 name="Task-CPU1" prio=0 reason=TASK_TERMINATED
+[000031] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=1 prio=0
+[000032] TASK_EXEC task_id=1 name="Task-CPU1" burst_rem=0 prio=0
+[000032] TASK_SWITCH prev=Some(1) next=3 name="Task-CPU2" prio=0 reason=TASK_TERMINATED
+[000033] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=3 prio=0
+[000034] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=2 prio=0
+[000035] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=1 prio=0
+[000036] TASK_EXEC task_id=3 name="Task-CPU2" burst_rem=0 prio=0
+[000036] SCHED_COMPLETE all_terminated=true

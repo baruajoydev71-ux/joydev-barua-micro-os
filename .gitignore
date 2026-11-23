@@ -1,0 +1,16 @@
+# Rust / Cargo build artifacts
+/target
+Cargo.lock
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.iml
+
+# OS specific files
+Thumbs.db
+.DS_Store
+
+# Temporary trace outputs
+*.tmp
