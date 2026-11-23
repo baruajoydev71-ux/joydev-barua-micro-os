@@ -3,9 +3,7 @@
 //! Implements Layer 2 and Layer 9: Structured diagnostic event emission
 //! compatible with Python trace parsers and benchmark evaluators.
 
-use crate::drivers::console::{LogLevel, CONSOLE};
 use crate::scheduler::SchedulerMetrics;
-use core::fmt;
 
 pub struct KernelDiagnostics;
 

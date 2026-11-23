@@ -4,7 +4,7 @@
 //! Supports INFO, WARN, ERROR, DEBUG, and TRACE severity levels
 //! with monotonic hardware tick timestamps.
 
-use core::fmt::{self, Write};
+use core::fmt;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

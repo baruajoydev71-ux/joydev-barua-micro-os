@@ -3,12 +3,10 @@
 //! Provides CLI execution modes for Core Round Robin, MLFQ Specialization,
 //! comparative workload analysis, and automated test cases (TC1-TC6).
 
-use micro_os::drivers::console::{set_log_level, LogLevel};
-use micro_os::kernel::{Kernel, KernelDiagnostics};
-use micro_os::memory::{BumpAllocator, FreeListAllocator};
+use micro_os::kernel::Kernel;
+use micro_os::memory::FreeListAllocator;
 use micro_os::scheduler::{MlfqScheduler, RoundRobinScheduler, Scheduler, SchedulerAction};
-use micro_os::sync::{SharedCounter, Spinlock};
-use micro_os::task::{BlockReason, TaskControlBlock, TaskKind, TaskQueue, TaskState};
+use micro_os::task::{TaskControlBlock, TaskKind};
 use micro_os::timer::TIMER;
 use core::alloc::Layout;
 use std::env;

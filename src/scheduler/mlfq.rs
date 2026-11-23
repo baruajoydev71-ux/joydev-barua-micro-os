@@ -107,16 +107,22 @@ impl Scheduler for MlfqScheduler {
         task.quantum_remaining = QUEUE_QUANTA[prio];
         let id = task.id;
 
-        for slot in self.tasks.iter_mut() {
+        let mut empty_idx = None;
+        for (i, slot) in self.tasks.iter().enumerate() {
             if slot.is_none() {
-                *slot = Some(task);
-                self.task_count += 1;
-                self.queues[prio].push(id)?;
-                return Ok(());
+                empty_idx = Some(i);
+                break;
             }
         }
 
-        Err("No available slot in task table")
+        if let Some(idx) = empty_idx {
+            self.tasks[idx] = Some(task);
+            self.task_count += 1;
+            self.queues[prio].push(id)?;
+            Ok(())
+        } else {
+            Err("No available slot in task table")
+        }
     }
 
     fn tick(&mut self, current_tick: u64) -> SchedulerAction {
@@ -128,18 +134,26 @@ impl Scheduler for MlfqScheduler {
             self.last_boost_tick = current_tick;
         }
 
-        // 2. Update blocked tasks
+        // 2. Update blocked tasks: unblocked tasks are staged locally to avoid borrow conflicts
+        let mut unblocked_tasks = [None; MAX_TASKS];
+        let mut unblock_count = 0;
         for slot in self.tasks.iter_mut() {
             if let Some(task) = slot {
                 if let TaskState::Blocked(BlockReason::IoWait(remaining)) = task.state {
                     if remaining <= 1 {
                         task.state = TaskState::Ready;
                         let prio = (task.priority as usize).min(NUM_QUEUES - 1);
-                        let _ = self.queues[prio].push(task.id);
+                        unblocked_tasks[unblock_count] = Some((task.id, prio));
+                        unblock_count += 1;
                     } else {
                         task.state = TaskState::Blocked(BlockReason::IoWait(remaining - 1));
                     }
                 }
+            }
+        }
+        for i in 0..unblock_count {
+            if let Some((task_id, prio)) = unblocked_tasks[i] {
+                let _ = self.queues[prio].push(task_id);
             }
         }
 
@@ -154,29 +168,64 @@ impl Scheduler for MlfqScheduler {
 
         // 4. Handle currently running task
         if let Some(curr_id) = self.current_task_id {
-            if let Some(idx) = self.find_task_index(curr_id) {
-                let task = self.tasks[idx].as_mut().unwrap();
+            let task_idx = self.find_task_index(curr_id);
+            if let Some(idx) = task_idx {
+                let mut task_terminated = false;
+                let mut task_quantum_expired = false;
+                let mut task_io_duration = None;
+                let task_curr_prio;
+                let mut task_new_prio = 0;
 
-                if task.first_scheduled_tick.is_none() {
-                    task.first_scheduled_tick = Some(current_tick);
-                }
+                // Scoped mutable borrow of the active task
+                {
+                    let task = self.tasks[idx].as_mut().unwrap();
 
-                task.burst_remaining = task.burst_remaining.saturating_sub(1);
-                task.cpu_ticks_accumulated += 1;
-                self.current_slice += 1;
-
-                // Simulated I/O behavior: I/O tasks voluntarily yield before exhausting quantum
-                if let TaskKind::IoBound { io_interval, io_duration } = task.kind {
-                    if task.cpu_ticks_accumulated > 0 && task.cpu_ticks_accumulated % (io_interval as u64) == 0 && task.burst_remaining > 0 {
-                        // Task keeps its current priority (Rule 4: I/O friendly)
-                        return self.block_current(BlockReason::IoWait(io_duration), current_tick);
+                    if task.first_scheduled_tick.is_none() {
+                        task.first_scheduled_tick = Some(current_tick);
                     }
+
+                    task.burst_remaining = task.burst_remaining.saturating_sub(1);
+                    task.cpu_ticks_accumulated += 1;
+                    self.current_slice += 1;
+
+                    task_curr_prio = (task.priority as usize).min(NUM_QUEUES - 1);
+
+                    // Simulated I/O behavior: yields before exhausting quantum (Rule 4)
+                    if let TaskKind::IoBound { io_interval, io_duration } = task.kind {
+                        if task.cpu_ticks_accumulated > 0
+                            && task.cpu_ticks_accumulated % (io_interval as u64) == 0
+                            && task.burst_remaining > 0
+                        {
+                            task_io_duration = Some(io_duration);
+                        }
+                    }
+
+                    if task_io_duration.is_none() {
+                        if task.burst_remaining == 0 {
+                            task.state = TaskState::Terminated;
+                            task.completion_tick = Some(current_tick);
+                            task_terminated = true;
+                        } else {
+                            let quantum = QUEUE_QUANTA[task_curr_prio];
+                            if self.current_slice >= quantum {
+                                task.state = TaskState::Ready;
+                                if task_curr_prio < NUM_QUEUES - 1 {
+                                    task.priority = (task_curr_prio + 1) as u8;
+                                }
+                                task_new_prio = task.priority as usize;
+                                task_quantum_expired = true;
+                            }
+                        }
+                    }
+                } // End of mutable borrow for active task
+
+                // 4a. Task requested I/O block
+                if let Some(io_duration) = task_io_duration {
+                    return self.block_current(BlockReason::IoWait(io_duration), current_tick);
                 }
 
-                // Check completion
-                if task.burst_remaining == 0 {
-                    task.state = TaskState::Terminated;
-                    task.completion_tick = Some(current_tick);
+                // 4b. Task terminated
+                if task_terminated {
                     let prev_id = curr_id;
                     self.current_task_id = None;
                     self.current_slice = 0;
@@ -204,22 +253,13 @@ impl Scheduler for MlfqScheduler {
                     }
                 }
 
-                let curr_prio = (task.priority as usize).min(NUM_QUEUES - 1);
-                let quantum = QUEUE_QUANTA[curr_prio];
-
-                // Check quantum expiration -> Demote to lower priority queue (Rule 3)
-                if self.current_slice >= quantum {
+                // 4c. Quantum expired -> Demote to lower priority queue (Rule 3)
+                if task_quantum_expired {
                     let prev_id = curr_id;
-                    task.state = TaskState::Ready;
-
-                    // Demote priority if not already at lowest queue
-                    if curr_prio < NUM_QUEUES - 1 {
-                        task.priority = (curr_prio + 1) as u8;
+                    if task_curr_prio < NUM_QUEUES - 1 {
                         self.demotion_count += 1;
                     }
-
-                    let new_prio = task.priority as usize;
-                    let _ = self.queues[new_prio].push(curr_id);
+                    let _ = self.queues[task_new_prio].push(curr_id);
                     self.current_task_id = None;
                     self.current_slice = 0;
 
@@ -240,36 +280,45 @@ impl Scheduler for MlfqScheduler {
                     }
                 }
 
-                // Check if a higher-priority task became ready (Preemption)
-                for prio in 0..curr_prio {
+                // 4d. Preemption if a higher-priority task became ready
+                let mut higher_prio_ready = false;
+                for prio in 0..task_curr_prio {
                     if !self.queues[prio].is_empty() {
-                        let prev_id = curr_id;
-                        task.state = TaskState::Ready;
-                        let _ = self.queues[curr_prio].push(curr_id);
-                        self.current_task_id = None;
-                        self.current_slice = 0;
-
-                        let (next_id, _) = self.pop_highest_priority_task().unwrap();
-                        let next_idx = self.find_task_index(next_id).unwrap();
-                        let next_task = self.tasks[next_idx].as_mut().unwrap();
-                        next_task.state = TaskState::Running;
-                        next_task.context_switches += 1;
-                        self.current_task_id = Some(next_id);
-                        self.total_switches += 1;
-
-                        return SchedulerAction::Switch {
-                            previous: Some(prev_id),
-                            next: next_id,
-                            reason: SwitchReason::PreemptionHigherPriority,
-                        };
+                        higher_prio_ready = true;
+                        break;
                     }
+                }
+
+                if higher_prio_ready {
+                    if let Some(idx) = self.find_task_index(curr_id) {
+                        let task = self.tasks[idx].as_mut().unwrap();
+                        task.state = TaskState::Ready;
+                    }
+                    let _ = self.queues[task_curr_prio].push(curr_id);
+                    let prev_id = curr_id;
+                    self.current_task_id = None;
+                    self.current_slice = 0;
+
+                    let (next_id, _) = self.pop_highest_priority_task().unwrap();
+                    let next_idx = self.find_task_index(next_id).unwrap();
+                    let next_task = self.tasks[next_idx].as_mut().unwrap();
+                    next_task.state = TaskState::Running;
+                    next_task.context_switches += 1;
+                    self.current_task_id = Some(next_id);
+                    self.total_switches += 1;
+
+                    return SchedulerAction::Switch {
+                        previous: Some(prev_id),
+                        next: next_id,
+                        reason: SwitchReason::PreemptionHigherPriority,
+                    };
                 }
 
                 return SchedulerAction::Continue(curr_id);
             }
         }
 
-        // No task currently running: pop from highest priority queue
+        // 5. No task currently running: pop from highest priority queue
         if let Some((next_id, _)) = self.pop_highest_priority_task() {
             if let Some(next_idx) = self.find_task_index(next_id) {
                 let next_task = self.tasks[next_idx].as_mut().unwrap();
@@ -300,28 +349,29 @@ impl Scheduler for MlfqScheduler {
 
     fn yield_current(&mut self, current_tick: u64) -> SchedulerAction {
         if let Some(curr_id) = self.current_task_id {
+            let mut prio = 0;
             if let Some(idx) = self.find_task_index(curr_id) {
                 let task = self.tasks[idx].as_mut().unwrap();
                 task.state = TaskState::Ready;
-                let prio = (task.priority as usize).min(NUM_QUEUES - 1);
-                let _ = self.queues[prio].push(curr_id);
-                self.current_task_id = None;
-                self.current_slice = 0;
+                prio = (task.priority as usize).min(NUM_QUEUES - 1);
+            }
+            let _ = self.queues[prio].push(curr_id);
+            self.current_task_id = None;
+            self.current_slice = 0;
 
-                if let Some((next_id, _)) = self.pop_highest_priority_task() {
-                    if let Some(next_idx) = self.find_task_index(next_id) {
-                        let next_task = self.tasks[next_idx].as_mut().unwrap();
-                        next_task.state = TaskState::Running;
-                        next_task.context_switches += 1;
-                        self.current_task_id = Some(next_id);
-                        self.total_switches += 1;
+            if let Some((next_id, _)) = self.pop_highest_priority_task() {
+                if let Some(next_idx) = self.find_task_index(next_id) {
+                    let next_task = self.tasks[next_idx].as_mut().unwrap();
+                    next_task.state = TaskState::Running;
+                    next_task.context_switches += 1;
+                    self.current_task_id = Some(next_id);
+                    self.total_switches += 1;
 
-                        return SchedulerAction::Switch {
-                            previous: Some(curr_id),
-                            next: next_id,
-                            reason: SwitchReason::TaskYielded,
-                        };
-                    }
+                    return SchedulerAction::Switch {
+                        previous: Some(curr_id),
+                        next: next_id,
+                        reason: SwitchReason::TaskYielded,
+                    };
                 }
             }
         }
@@ -333,40 +383,43 @@ impl Scheduler for MlfqScheduler {
             if let Some(idx) = self.find_task_index(curr_id) {
                 let task = self.tasks[idx].as_mut().unwrap();
                 task.state = TaskState::Blocked(reason);
-                let prev_id = curr_id;
-                self.current_task_id = None;
-                self.current_slice = 0;
-
-                if let Some((next_id, _)) = self.pop_highest_priority_task() {
-                    if let Some(next_idx) = self.find_task_index(next_id) {
-                        let next_task = self.tasks[next_idx].as_mut().unwrap();
-                        next_task.state = TaskState::Running;
-                        next_task.context_switches += 1;
-                        self.current_task_id = Some(next_id);
-                        self.total_switches += 1;
-
-                        return SchedulerAction::Switch {
-                            previous: Some(prev_id),
-                            next: next_id,
-                            reason: SwitchReason::TaskBlocked,
-                        };
-                    }
-                }
-
-                return SchedulerAction::Idle;
             }
+            let prev_id = curr_id;
+            self.current_task_id = None;
+            self.current_slice = 0;
+
+            if let Some((next_id, _)) = self.pop_highest_priority_task() {
+                if let Some(next_idx) = self.find_task_index(next_id) {
+                    let next_task = self.tasks[next_idx].as_mut().unwrap();
+                    next_task.state = TaskState::Running;
+                    next_task.context_switches += 1;
+                    self.current_task_id = Some(next_id);
+                    self.total_switches += 1;
+
+                    return SchedulerAction::Switch {
+                        previous: Some(prev_id),
+                        next: next_id,
+                        reason: SwitchReason::TaskBlocked,
+                    };
+                }
+            }
+
+            return SchedulerAction::Idle;
         }
         SchedulerAction::Idle
     }
 
     fn unblock_task(&mut self, task_id: u32, _current_tick: u64) {
+        let mut unblock_prio = None;
         if let Some(idx) = self.find_task_index(task_id) {
             let task = self.tasks[idx].as_mut().unwrap();
             if task.is_blocked() {
                 task.state = TaskState::Ready;
-                let prio = (task.priority as usize).min(NUM_QUEUES - 1);
-                let _ = self.queues[prio].push(task_id);
+                unblock_prio = Some((task.priority as usize).min(NUM_QUEUES - 1));
             }
+        }
+        if let Some(prio) = unblock_prio {
+            let _ = self.queues[prio].push(task_id);
         }
     }
 

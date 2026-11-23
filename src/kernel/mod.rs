@@ -4,11 +4,10 @@ pub mod hal;
 pub use diagnostics::KernelDiagnostics;
 pub use hal::{HardwareAbstraction, SIMULATED_RAM_SIZE};
 
-use crate::drivers::console::{LogLevel, CONSOLE};
 use crate::memory::{BumpAllocator, FreeListAllocator};
 use crate::scheduler::{MlfqScheduler, RoundRobinScheduler, Scheduler, SchedulerAction};
 use crate::sync::{SharedCounter, Spinlock};
-use crate::task::{BlockReason, TaskControlBlock, TaskKind};
+use crate::task::{TaskControlBlock, TaskKind};
 use crate::timer::TIMER;
 use core::alloc::Layout;
 

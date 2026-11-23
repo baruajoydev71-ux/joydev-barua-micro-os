@@ -57,33 +57,46 @@ impl Scheduler for RoundRobinScheduler {
         task.quantum_remaining = self.quantum;
         let id = task.id;
 
-        // Find empty slot
-        for slot in self.tasks.iter_mut() {
+        let mut empty_idx = None;
+        for (i, slot) in self.tasks.iter().enumerate() {
             if slot.is_none() {
-                *slot = Some(task);
-                self.task_count += 1;
-                self.ready_queue.push(id)?;
-                return Ok(());
+                empty_idx = Some(i);
+                break;
             }
         }
 
-        Err("No available slot in task table")
+        if let Some(idx) = empty_idx {
+            self.tasks[idx] = Some(task);
+            self.task_count += 1;
+            self.ready_queue.push(id)?;
+            Ok(())
+        } else {
+            Err("No available slot in task table")
+        }
     }
 
     fn tick(&mut self, current_tick: u64) -> SchedulerAction {
         self.total_ticks += 1;
 
-        // 1. Update blocked tasks (e.g. decrement I/O sleep timers)
+        // 1. Update blocked tasks: unblocked tasks are staged locally
+        let mut unblocked_tasks = [None; MAX_TASKS];
+        let mut unblock_count = 0;
         for slot in self.tasks.iter_mut() {
             if let Some(task) = slot {
                 if let TaskState::Blocked(BlockReason::IoWait(remaining)) = task.state {
                     if remaining <= 1 {
                         task.state = TaskState::Ready;
-                        let _ = self.ready_queue.push(task.id);
+                        unblocked_tasks[unblock_count] = Some(task.id);
+                        unblock_count += 1;
                     } else {
                         task.state = TaskState::Blocked(BlockReason::IoWait(remaining - 1));
                     }
                 }
+            }
+        }
+        for i in 0..unblock_count {
+            if let Some(task_id) = unblocked_tasks[i] {
+                let _ = self.ready_queue.push(task_id);
             }
         }
 
@@ -98,35 +111,59 @@ impl Scheduler for RoundRobinScheduler {
 
         // 3. Handle currently running task
         if let Some(curr_id) = self.current_task_id {
-            if let Some(idx) = self.find_task_index(curr_id) {
-                let task = self.tasks[idx].as_mut().unwrap();
+            let task_idx = self.find_task_index(curr_id);
+            if let Some(idx) = task_idx {
+                let mut task_terminated = false;
+                let mut task_quantum_expired = false;
+                let mut task_io_duration = None;
 
-                // First scheduled recording
-                if task.first_scheduled_tick.is_none() {
-                    task.first_scheduled_tick = Some(current_tick);
-                }
+                // Scoped mutable borrow of the active task
+                {
+                    let task = self.tasks[idx].as_mut().unwrap();
 
-                // Decrement burst and increment accumulated execution
-                task.burst_remaining = task.burst_remaining.saturating_sub(1);
-                task.cpu_ticks_accumulated += 1;
-                self.current_slice += 1;
-
-                // Simulated I/O behavior
-                if let TaskKind::IoBound { io_interval, io_duration } = task.kind {
-                    if task.cpu_ticks_accumulated > 0 && task.cpu_ticks_accumulated % (io_interval as u64) == 0 && task.burst_remaining > 0 {
-                        return self.block_current(BlockReason::IoWait(io_duration), current_tick);
+                    // First scheduled recording
+                    if task.first_scheduled_tick.is_none() {
+                        task.first_scheduled_tick = Some(current_tick);
                     }
+
+                    // Decrement burst and increment accumulated execution
+                    task.burst_remaining = task.burst_remaining.saturating_sub(1);
+                    task.cpu_ticks_accumulated += 1;
+                    self.current_slice += 1;
+
+                    // Simulated I/O behavior
+                    if let TaskKind::IoBound { io_interval, io_duration } = task.kind {
+                        if task.cpu_ticks_accumulated > 0
+                            && task.cpu_ticks_accumulated % (io_interval as u64) == 0
+                            && task.burst_remaining > 0
+                        {
+                            task_io_duration = Some(io_duration);
+                        }
+                    }
+
+                    if task_io_duration.is_none() {
+                        if task.burst_remaining == 0 {
+                            task.state = TaskState::Terminated;
+                            task.completion_tick = Some(current_tick);
+                            task_terminated = true;
+                        } else if self.current_slice >= self.quantum {
+                            task.state = TaskState::Ready;
+                            task_quantum_expired = true;
+                        }
+                    }
+                } // End of mutable borrow for active task
+
+                // 3a. Task requested I/O block
+                if let Some(io_duration) = task_io_duration {
+                    return self.block_current(BlockReason::IoWait(io_duration), current_tick);
                 }
 
-                // Check for completion
-                if task.burst_remaining == 0 {
-                    task.state = TaskState::Terminated;
-                    task.completion_tick = Some(current_tick);
+                // 3b. Task completed
+                if task_terminated {
                     let prev_id = curr_id;
                     self.current_task_id = None;
                     self.current_slice = 0;
 
-                    // Switch to next ready task
                     if let Some(next_id) = self.ready_queue.pop() {
                         if let Some(next_idx) = self.find_task_index(next_id) {
                             let next_task = self.tasks[next_idx].as_mut().unwrap();
@@ -150,10 +187,9 @@ impl Scheduler for RoundRobinScheduler {
                     }
                 }
 
-                // Check for quantum expiration (Preemption)
-                if self.current_slice >= self.quantum {
+                // 3c. Quantum expired (Preemption)
+                if task_quantum_expired {
                     let prev_id = curr_id;
-                    task.state = TaskState::Ready;
                     let _ = self.ready_queue.push(curr_id);
                     self.current_task_id = None;
                     self.current_slice = 0;
@@ -179,7 +215,7 @@ impl Scheduler for RoundRobinScheduler {
             }
         }
 
-        // No task currently running: select next from ready queue
+        // 4. No task currently running: select next from ready queue
         if let Some(next_id) = self.ready_queue.pop() {
             if let Some(next_idx) = self.find_task_index(next_id) {
                 let next_task = self.tasks[next_idx].as_mut().unwrap();
@@ -213,24 +249,24 @@ impl Scheduler for RoundRobinScheduler {
             if let Some(idx) = self.find_task_index(curr_id) {
                 let task = self.tasks[idx].as_mut().unwrap();
                 task.state = TaskState::Ready;
-                let _ = self.ready_queue.push(curr_id);
-                self.current_task_id = None;
-                self.current_slice = 0;
+            }
+            let _ = self.ready_queue.push(curr_id);
+            self.current_task_id = None;
+            self.current_slice = 0;
 
-                if let Some(next_id) = self.ready_queue.pop() {
-                    if let Some(next_idx) = self.find_task_index(next_id) {
-                        let next_task = self.tasks[next_idx].as_mut().unwrap();
-                        next_task.state = TaskState::Running;
-                        next_task.context_switches += 1;
-                        self.current_task_id = Some(next_id);
-                        self.total_switches += 1;
+            if let Some(next_id) = self.ready_queue.pop() {
+                if let Some(next_idx) = self.find_task_index(next_id) {
+                    let next_task = self.tasks[next_idx].as_mut().unwrap();
+                    next_task.state = TaskState::Running;
+                    next_task.context_switches += 1;
+                    self.current_task_id = Some(next_id);
+                    self.total_switches += 1;
 
-                        return SchedulerAction::Switch {
-                            previous: Some(curr_id),
-                            next: next_id,
-                            reason: SwitchReason::TaskYielded,
-                        };
-                    }
+                    return SchedulerAction::Switch {
+                        previous: Some(curr_id),
+                        next: next_id,
+                        reason: SwitchReason::TaskYielded,
+                    };
                 }
             }
         }
@@ -242,39 +278,43 @@ impl Scheduler for RoundRobinScheduler {
             if let Some(idx) = self.find_task_index(curr_id) {
                 let task = self.tasks[idx].as_mut().unwrap();
                 task.state = TaskState::Blocked(reason);
-                let prev_id = curr_id;
-                self.current_task_id = None;
-                self.current_slice = 0;
-
-                if let Some(next_id) = self.ready_queue.pop() {
-                    if let Some(next_idx) = self.find_task_index(next_id) {
-                        let next_task = self.tasks[next_idx].as_mut().unwrap();
-                        next_task.state = TaskState::Running;
-                        next_task.context_switches += 1;
-                        self.current_task_id = Some(next_id);
-                        self.total_switches += 1;
-
-                        return SchedulerAction::Switch {
-                            previous: Some(prev_id),
-                            next: next_id,
-                            reason: SwitchReason::TaskBlocked,
-                        };
-                    }
-                }
-
-                return SchedulerAction::Idle;
             }
+            let prev_id = curr_id;
+            self.current_task_id = None;
+            self.current_slice = 0;
+
+            if let Some(next_id) = self.ready_queue.pop() {
+                if let Some(next_idx) = self.find_task_index(next_id) {
+                    let next_task = self.tasks[next_idx].as_mut().unwrap();
+                    next_task.state = TaskState::Running;
+                    next_task.context_switches += 1;
+                    self.current_task_id = Some(next_id);
+                    self.total_switches += 1;
+
+                    return SchedulerAction::Switch {
+                        previous: Some(prev_id),
+                        next: next_id,
+                        reason: SwitchReason::TaskBlocked,
+                    };
+                }
+            }
+
+            return SchedulerAction::Idle;
         }
         SchedulerAction::Idle
     }
 
     fn unblock_task(&mut self, task_id: u32, _current_tick: u64) {
+        let mut should_enqueue = false;
         if let Some(idx) = self.find_task_index(task_id) {
             let task = self.tasks[idx].as_mut().unwrap();
             if task.is_blocked() {
                 task.state = TaskState::Ready;
-                let _ = self.ready_queue.push(task_id);
+                should_enqueue = true;
             }
+        }
+        if should_enqueue {
+            let _ = self.ready_queue.push(task_id);
         }
     }
 
