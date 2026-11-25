@@ -1,8 +1,10 @@
 pub mod diagnostics;
 pub mod hal;
+pub mod hardware;
 
 pub use diagnostics::KernelDiagnostics;
 pub use hal::{HardwareAbstraction, SIMULATED_RAM_SIZE};
+pub use hardware::{HardwareCompatibilitySummary, HardwareManager, PciDeviceInfo};
 
 use crate::memory::{BumpAllocator, FreeListAllocator};
 use crate::scheduler::{MlfqScheduler, RoundRobinScheduler, Scheduler, SchedulerAction};

@@ -1,9 +1,10 @@
-# Micro-OS: Educational Rust Micro-Kernel Engineering Project
+# Joydev Micro-OS: Educational Rust Micro-Kernel & Metro Ash Desktop
 ### CA-6 Flagship Engineering Assessment | Operating Systems (15 Marks)
+**Student Name:** Joydev Barua | **Repository:** [joydev-barua-micro-os](https://github.com/baruajoydev71-ux/joydev-barua-micro-os)
 
 > **Central Question**: *Can students move beyond using an operating system to designing and implementing selected operating-system mechanisms themselves?*
 
-Micro-OS is a modular, transparent, and reproducible educational operating system built in **Rust**. It demonstrates fundamental low-level OS mechanisms: bare-metal bootstrapping, structured serial diagnostics, task control blocks, ready queues, timer-driven preemption, mutual-exclusion synchronization, and dynamic memory allocation with block coalescing.
+**Joydev Micro-OS** is a modular, transparent, and reproducible educational operating system built in **Rust**, paired with the interactive **Joydev Micro-OS Graphical Desktop (Metro Ash Edition)**. It demonstrates fundamental low-level OS mechanisms: bare-metal bootstrapping, structured serial diagnostics, task control blocks, ready queues, timer-driven preemption, mutual-exclusion synchronization, and dynamic memory allocation with block coalescing.
 
 In addition to all 10 Core layers, this project implements **Specialization Track A: Scheduler Engineering**, featuring a complete **Multi-Level Feedback Queue (MLFQ)** with dynamic priority demotion, I/O-friendly retention, and periodic anti-starvation priority boosting (aging).
 
@@ -13,15 +14,26 @@ In addition to all 10 Core layers, this project implements **Specialization Trac
 
 ### Prerequisites
 - **Rust Toolchain**: `cargo`, `rustc` (Edition 2021)
-- **Python**: Python 3.8+ (for trace parsing and Gantt visualization)
+- **Python**: Python 3.8+ (for live desktop bridge, trace parsing, and Gantt visualization)
 
-### 1. Run the Full Comparative Demonstration (Round Robin vs MLFQ):
+### 1. Launch Joydev Micro-OS Desktop (Metro Ash Edition):
+```bat
+run_desktop.bat
+```
+Or manually:
+```bash
+python desktop/wifi_bridge.py
+# Then open http://127.0.0.1:8765/ in your browser
+```
+*Features the flat Metro UI Ash Colour Theme with Live Tiles, live host Wi-Fi auto-sync (`netsh` + native Windows `WlanScan` + real gateway ping), a working **Developer Terminal** (`cargo run`, `cargo test`, `who am i` → `Joydev Barua`, `neofetch`, `ls`, `cd`, Tab autocomplete, command history), Microkernel Console, System Monitor (MLFQ Gantt chart), Developer Studio, and Hardware Dashboard.*
+
+### 2. Run the Full Comparative Demonstration (Round Robin vs MLFQ):
 ```bash
 cargo run -- --compare
 ```
 *Executes identical workloads across both schedulers, prints a comparative metrics table, and exports trace logs to `traces/` and CSV metrics to `results/`.*
 
-### 2. Run the Formal Verification Suite (TC1 – TC6):
+### 3. Run the Formal Verification Suite (TC1 – TC6):
 ```bash
 cargo run -- --test-all
 # OR
@@ -29,7 +41,7 @@ cargo test
 ```
 *Validates minimum configuration (TC1), heterogeneous multitasking (TC2), boundary quantum (TC3), 16-task stress workload (TC4), OOM/double-free rejection (TC5), and bitwise repeatability (TC6).*
 
-### 3. Run the Python Trace Analysis & Visualizer:
+### 4. Run the Python Trace Analysis & Visualizer:
 ```bash
 python scripts/analyze_traces.py
 python scripts/visualize.py
@@ -45,6 +57,10 @@ micro-os/
 ├── README.md                          # Project documentation and rubric mapping
 ├── Cargo.toml                         # Rust package definition (#![no_std] compatible)
 ├── .gitignore                         # Build artifact ignore rules
+├── run_desktop.bat                    # Launches Metro Ash Desktop + live Wi-Fi & terminal bridge
+├── desktop/
+│   ├── index.html                     # Joydev Micro-OS Graphical Desktop (Metro Ash Edition)
+│   └── wifi_bridge.py                 # Local Python bridge for live Wi-Fi sync & Developer Terminal
 ├── docs/
 │   ├── final_report.md                # Section 23: Complete 20-section formal technical report
 │   ├── architecture.md                # System architecture & Mermaid control flow diagrams
