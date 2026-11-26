@@ -1,0 +1,1149 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=0.95in,bottom=0.95in,left=0.9in,right=0.9in,headheight=18pt,headsep=18pt]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{jainnavy}{RGB}{22, 48, 92}
+\definecolor{slategray}{RGB}{74, 85, 104}
+\definecolor{rulegray}{RGB}{180, 188, 200}
+
+% Native LaTeX running header & footer (zero external header package dependencies)
+\makeatletter
+\def\ps@labpage{%
+  \def\@oddhead{%
+    \vbox{%
+      \hbox to \textwidth{\small\textit{\textcolor{slategray}{Operating Systems Laboratory (25PCCS201)}}\hfill\textit{\textcolor{slategray}{Joydev Barua (25BTRCL298)}}}%
+      \vspace{3pt}%
+      \textcolor{rulegray}{\hrule height 0.5pt}%
+    }%
+  }%
+  \def\@oddfoot{\hfill\small\thepage\hfill}%
+  \let\@evenhead\@oddhead
+  \let\@evenfoot\@oddfoot
+}
+\def\ps@plain{%
+  \def\@oddhead{}%
+  \def\@oddfoot{\hfill\small\thepage\hfill}%
+  \let\@evenhead\@oddhead
+  \let\@evenfoot\@oddfoot
+}
+\makeatother
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setcounter{tocdepth}{2}
+\sloppy
+
+\newcommand{\labexp}[2]{%
+  \phantomsection%
+  \addcontentsline{toc}{section}{#1\texorpdfstring{\quad}{ }#2}%
+  {\raggedright\Large\bfseries\textcolor{jainnavy}{Experiment #1: #2}\par}%
+  \vspace{4pt}%
+}
+\newcommand{\labsub}[1]{%
+  \vspace{5pt}{\raggedright\normalsize\bfseries\textcolor{jainnavy}{#1}\par}\vspace{2pt}%
+}
+
+\begin{document}
+
+% ==================== COVER PAGE ====================
+\thispagestyle{empty}
+\begin{center}
+  \vspace*{0.4cm}
+  {\LARGE\bfseries\textcolor{jainnavy}{JAIN (DEEMED-TO-BE UNIVERSITY)}}\\[0.25cm]
+  {\large\textbf{Faculty of Engineering \& Technology}}\\[0.1cm]
+  {\normalsize Department of Computer Science \& Engineering, Bengaluru}\\[1.1cm]
+
+  \textcolor{jainnavy}{\rule{\textwidth}{1.8pt}}\\[0.45cm]
+  {\Huge\bfseries\textcolor{jainnavy}{OPERATING SYSTEMS LABORATORY}}\\[0.35cm]
+  {\Large\bfseries LABORATORY RECORD (CHAPTERS 1--21)}\\[0.3cm]
+  {\normalsize\texttt{Course Code: 25PCCS201 \quad|\quad Semester: III}}\\[0.35cm]
+  \textcolor{jainnavy}{\rule{\textwidth}{1.8pt}}\\[1.3cm]
+
+  {\large\textbf{STUDENT \& ENVIRONMENT METADATA}}\\[0.35cm]
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Attribute} & \textbf{Details} \\
+    \midrule
+    \textbf{Student Name} & \textbf{JOYDEV BARUA} \\
+    \textbf{University Seat Number (USN)} & \textbf{25BTRCL298} \\
+    \textbf{Program / Branch} & B.Tech (Computer Science \& Engineering) \\
+    \textbf{Course Title \& Code} & Operating Systems Laboratory (\texttt{25PCCS201}) \\
+    \textbf{Academic Year} & 2026--2027 \\
+    \textbf{Execution Platform} & Windows 11 x86\_64 (Python 3.14 / GNU Bash) \\
+    \textbf{Host Machine} & HP OMEN Laptop (\texttt{joydev@Joydev\_Barua}) \\
+    \textbf{Verified Experiments} & 62 Native Implementations across 21 Chapters \\
+    \bottomrule
+  \end{tabular}
+
+  \vfill
+  \textcolor{rulegray}{\rule{0.75\textwidth}{0.6pt}}\\[0.35cm]
+  {\small\textit{Submitted in partial fulfillment of the practical laboratory requirements for}}\\[0.1cm]
+  {\small\textbf{Operating Systems Laboratory (25PCCS201)}}\\
+  {\small Department of Computer Science \& Engineering, School of Computer Science \& IT}\\[0.2cm]
+  {\small\textit{All source listings and execution outputs in this record were genuinely executed and verified on \texttt{joydev@Joydev\_Barua}.}}
+  \vspace*{0.4cm}
+\end{center}
+\clearpage
+
+% ==================== TABLE OF CONTENTS ====================
+\pagenumbering{roman}
+\pagestyle{labpage}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\pagestyle{labpage}
+
+
+\chapter{Introduction to Operating Systems \& UNIX Fundamentals}
+\noindent\textit{Exploration of foundational UNIX and operating system interfaces, directory traversal primitives, concurrent process creation and reaping, simulation of core utilities (\texttt{cp}, \texttt{ls}, \texttt{grep}), and automated Bash shell scripting.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{1.1}{Directory Traversal System Calls (opendir, readdir, closedir)}
+\textbf{Aim:} To implement a program that traverses a target directory stream and enumerates every directory entry using OS directory inspection APIs.\par
+\textbf{Theoretical Principle:} Operating systems expose hierarchical file systems through directory stream interfaces. In POSIX, \texttt{opendir()} initializes a directory stream handle, \texttt{readdir()} sequentially yields directory entry records containing file names and inode identifiers, and \texttt{closedir()} releases the underlying kernel descriptor. Python's \texttt{os.scandir()} wraps these OS primitives directly, returning entry names, types, and inode numbers in a single kernel scan.\par
+\labsub{1. Source Code Implementation (\texttt{list\_dir.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_1.png}\\[4pt]
+  {\small\textit{Figure 1.1: Source Code Listing --- \texttt{list\_dir.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_1.png}\\[4pt]
+  {\small\textit{Figure 1.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The directory scanner opens the OS directory stream, retrieves inode identifiers and file types for every active entry, and cleanly closes the descriptor via the context manager.\par
+\clearpage
+\labexp{1.2}{Process Creation \& Identification System Calls (spawn, getpid, getppid, exit, wait)}
+\textbf{Aim:} To implement a concurrent program that spawns an isolated child process, inspects parent and child Process Identifiers (PID/PPID), and synchronizes termination.\par
+\textbf{Theoretical Principle:} Every running program is managed by the kernel as an isolated process with a unique Process Identifier (\texttt{PID}) and a Parent Process Identifier (\texttt{PPID}). Spawning a child process allocates a new Process Control Block (PCB) and address space. The parent invokes \texttt{wait()}/\texttt{join()} to synchronize execution and reap the child's exit status, preventing zombie entries in the OS process table.\par
+\labsub{1. Source Code Implementation (\texttt{process\_spawn\_demo.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_2.png}\\[4pt]
+  {\small\textit{Figure 1.3: Source Code Listing --- \texttt{process\_spawn\_demo.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_2.png}\\[4pt]
+  {\small\textit{Figure 1.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The kernel assigns distinct PIDs to parent and child processes, links the child's PPID to the parent, and returns exit code 0 cleanly upon parent synchronization.\par
+\clearpage
+\labexp{1.3}{Simulation of UNIX 'cp' Utility (File Copy, Character \& Space Counting)}
+\textbf{Aim:} To develop a utility simulating UNIX \texttt{cp} file stream copying while counting characters, whitespace delimiters, and lines.\par
+\textbf{Theoretical Principle:} File copy utilities read byte streams from a source file handle and write them sequentially to a destination handle. Buffered file I/O reduces kernel transition frequency by transferring chunks in user-space buffers before flushing to disk blocks.\par
+\labsub{1. Source Code Implementation (\texttt{cp\_count\_spaces.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_3.png}\\[4pt]
+  {\small\textit{Figure 1.5: Source Code Listing --- \texttt{cp\_count\_spaces.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_3.png}\\[4pt]
+  {\small\textit{Figure 1.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Sequential buffered file stream I/O accurately duplicates the source payload to the destination file and tallies exact whitespace delimiter counts.\par
+\clearpage
+\labexp{1.4}{Simulation of UNIX 'ls' Utility with Directory Argument Support}
+\textbf{Aim:} To write a command-line utility mimicking UNIX \texttt{ls} that accepts a target directory argument and prints formatted file metadata.\par
+\textbf{Theoretical Principle:} Command-line utilities accept dynamic target paths via argument vectors (\texttt{argv}). Querying each directory entry's \texttt{stat} block allows reporting file sizes in bytes alongside entry names in sorted lexicographical order.\par
+\labsub{1. Source Code Implementation (\texttt{my\_ls.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_4.png}\\[4pt]
+  {\small\textit{Figure 1.7: Source Code Listing --- \texttt{my\_ls.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_4.png}\\[4pt]
+  {\small\textit{Figure 1.8: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The simulated \texttt{ls} command resolves arbitrary CLI directory paths, inspects file metadata, and presents sorted directory listings.\par
+\clearpage
+\labexp{1.5}{Simulation of UNIX 'grep' Utility (Pattern Searching in Text Streams)}
+\textbf{Aim:} To implement a pattern-matching utility replicating UNIX \texttt{grep}, printing matching line numbers, matched lines, and total match frequency.\par
+\textbf{Theoretical Principle:} Text-filtering utilities stream input files line by line within bounded memory buffers, applying substring or regular-expression matching to emit matching lines tagged with their 1-based line indices.\par
+\labsub{1. Source Code Implementation (\texttt{my\_grep.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_5.png}\\[4pt]
+  {\small\textit{Figure 1.9: Source Code Listing --- \texttt{my\_grep.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_5.png}\\[4pt]
+  {\small\textit{Figure 1.10: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Line-buffered linear scanning reliably identifies every pattern match along with accurate file line indices and aggregate occurrence counts.\par
+\clearpage
+\labexp{1.6}{Shell Scripting: Conditional Statements (Even/Odd \& Leap Year Verification)}
+\textbf{Aim:} To author a GNU Bash script employing arithmetic evaluation and conditional branching to classify integers as even/odd and verify leap years.\par
+\textbf{Theoretical Principle:} Bourne-Again Shell (Bash) scripting automates administrative tasks directly inside the command interpreter. Arithmetic evaluation \texttt{(( expr ))} and conditional blocks \texttt{if ... then ... fi} evaluate modulo checks ($n \bmod 2 = 0$) and compound Gregorian leap-year rules: $(y \bmod 4 = 0 \land y \bmod 100 \neq 0) \lor (y \bmod 400 = 0)$.\par
+\labsub{1. Source Code Implementation (\texttt{conditions.sh})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_6.png}\\[4pt]
+  {\small\textit{Figure 1.11: Source Code Listing --- \texttt{conditions.sh} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_6.png}\\[4pt]
+  {\small\textit{Figure 1.12: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} GNU Bash arithmetic expressions and compound Boolean conditions accurately evaluate integer parity and Gregorian leap-year rules without requiring external binaries.\par
+\clearpage
+\labexp{1.7}{Shell Scripting: Iteration \& Variables (Factorial \& Variable Swapping)}
+\textbf{Aim:} To construct a Bash script demonstrating \texttt{while} loop iteration for factorial calculation and lossless variable swapping.\par
+\textbf{Theoretical Principle:} Iterative control structures in Bash such as \texttt{while [ \$num -gt 1 ]} repeatedly execute shell blocks while maintaining mutable environment variables. Swapping two values via an auxiliary register preserves both operands across assignment statements.\par
+\labsub{1. Source Code Implementation (\texttt{loops\_and\_vars.sh})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_1_7.png}\\[4pt]
+  {\small\textit{Figure 1.13: Source Code Listing --- \texttt{loops\_and\_vars.sh} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_1_7.png}\\[4pt]
+  {\small\textit{Figure 1.14: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Bash \texttt{while} loops maintain arithmetic state cleanly across iterations ($7! = 5040$) and perform atomic shell variable swaps without data loss.\par
+
+\chapter{Operating-System Structures \& System Call Interfaces}
+\noindent\textit{Investigation of the user-kernel system call boundary, raw OS file descriptors, unbuffered low-level file I/O (\texttt{open}, \texttt{read}, \texttt{write}, \texttt{close}), and virtual pseudo-filesystem elapsed-time reporting.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{2.1}{Low-Level Unbuffered File I/O via Kernel System Calls (Ex 2.24)}
+\textbf{Aim:} To implement unbuffered file transfer using raw OS file descriptors (\texttt{os.open}, \texttt{os.read}, \texttt{os.write}, \texttt{os.close}) and inspect descriptor allocation.\par
+\textbf{Theoretical Principle:} Whereas high-level streams buffer data in user space, raw POSIX system calls operate directly on non-negative integer file descriptors indexing the kernel's per-process open file table. Reading and writing fixed 4096-byte page-aligned blocks minimizes redundant user-space buffering.\par
+\labsub{1. Source Code Implementation (\texttt{syscall\_file\_copy.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_2_1.png}\\[4pt]
+  {\small\textit{Figure 2.1: Source Code Listing --- \texttt{syscall\_file\_copy.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_2_1.png}\\[4pt]
+  {\small\textit{Figure 2.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Direct descriptor-based I/O allocates low integer file descriptors (3 and 4, immediately after stdin/stdout/stderr) and transfers all payload bytes intact without user-level stdio buffering.\par
+\clearpage
+\labexp{2.2}{The Linux /proc Virtual Filesystem \& Kernel Elapsed Time Reporting (Ex 2.4)}
+\textbf{Aim:} To model a virtual \texttt{/proc/seconds} kernel interface reporting monotonic elapsed uptime since module registration.\par
+\textbf{Theoretical Principle:} The \texttt{/proc} pseudo-filesystem synthesizes file contents dynamically in memory when a process invokes \texttt{read()}. Kernel modules register virtual entries via \texttt{proc\_create()} and compute elapsed seconds from monotonic hardware tick counters (\texttt{jiffies} / \texttt{time.monotonic()}).\par
+\labsub{1. Source Code Implementation (\texttt{proc\_seconds.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_2_2.png}\\[4pt]
+  {\small\textit{Figure 2.3: Source Code Listing --- \texttt{proc\_seconds.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_2_2.png}\\[4pt]
+  {\small\textit{Figure 2.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Each read query dynamically computes monotonic elapsed time on demand without writing any persistent state to disk, demonstrating kernel-to-user introspection.\par
+
+\chapter{Processes \& Inter-Process Communication (IPC)}
+\noindent\textit{Implementation of process timing over IPC pipes and shared memory, bitmap PID allocators, Collatz sequence child computation, full-duplex dual pipes, pipe-based file streaming, a custom interactive command shell, task inspection, DFS process tree walks, and kernel linked lists.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{3.1}{Process Execution Timing via IPC Pipes \& Shared Memory (Ex 3.19)}
+\textbf{Aim:} To measure child command execution latency by passing high-resolution start timestamps from child to parent over an IPC pipe and shared memory.\par
+\textbf{Theoretical Principle:} Accurate command timing requires recording the start timestamp inside the child immediately before invoking the target program. Communicating that timestamp back to the parent via a unidirectional IPC pipe or shared memory segment decouples measurement from parent spawn overhead.\par
+\labsub{1. Source Code Implementation (\texttt{time\_ipc.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_1.png}\\[4pt]
+  {\small\textit{Figure 3.1: Source Code Listing --- \texttt{time\_ipc.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_1.png}\\[4pt]
+  {\small\textit{Figure 3.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Passing start timestamps over a unidirectional OS pipe isolates child execution latency cleanly from parent process creation overhead.\par
+\clearpage
+\labexp{3.2}{Process Identifier (PID) Management via Bitmap Allocation (Ex 3.20)}
+\textbf{Aim:} To construct an OS PID manager backed by a compact bitmap covering PIDs in the range $[300, 5000]$.\par
+\textbf{Theoretical Principle:} Kernels track active PIDs using compact bit arrays where bit index $i$ corresponds to $\text{MIN\_PID} + i$. Allocation locates the first clear bit (0), marks it occupied (1), and returns the PID; releasing a PID resets its bit in $O(1)$ time for immediate reuse.\par
+\labsub{1. Source Code Implementation (\texttt{pid\_manager.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_2.png}\\[4pt]
+  {\small\textit{Figure 3.3: Source Code Listing --- \texttt{pid\_manager.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_2.png}\\[4pt]
+  {\small\textit{Figure 3.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The bitmap allocator guarantees unique PID assignment across the pool and immediately recycles released identifiers (PID 301) with minimal memory overhead.\par
+\clearpage
+\labexp{3.3}{Collatz Sequence Generation in Child Process with Shared Memory (Ex 3.21 \& 3.22)}
+\textbf{Aim:} To compute the $3n+1$ Collatz sequence inside a child process and return the result to the parent through OS shared memory.\par
+\textbf{Theoretical Principle:} Under the Collatz recurrence, $n \leftarrow n/2$ when $n$ is even and $n \leftarrow 3n+1$ when $n$ is odd, terminating at $1$. Writing the sequence into a POSIX/OS shared memory buffer allows zero-copy handoff to the parent after process synchronization.\par
+\labsub{1. Source Code Implementation (\texttt{collatz\_shm.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_3.png}\\[4pt]
+  {\small\textit{Figure 3.5: Source Code Listing --- \texttt{collatz\_shm.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_3.png}\\[4pt]
+  {\small\textit{Figure 3.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The child process computes the complete Collatz trajectory into shared memory and the parent retrieves the verified byte sequence cleanly after \texttt{join()}.\par
+\clearpage
+\labexp{3.4}{Bidirectional IPC with Dual Ordinary Pipes (Ex 3.26 Reverse Case)}
+\textbf{Aim:} To implement full-duplex inter-process communication using two unidirectional pipes where the child toggles letter casing.\par
+\textbf{Theoretical Principle:} Standard OS pipes are half-duplex (single direction). Establishing full-duplex request-response IPC requires pairing two pipes: Pipe 1 streams raw text from parent to child, while Pipe 2 streams the case-inverted response back to the parent.\par
+\labsub{1. Source Code Implementation (\texttt{dual\_pipe\_reverse\_case.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_4.png}\\[4pt]
+  {\small\textit{Figure 3.7: Source Code Listing --- \texttt{dual\_pipe\_reverse\_case.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_4.png}\\[4pt]
+  {\small\textit{Figure 3.8: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Two independent unidirectional pipes establish synchronized bidirectional IPC, inverting every alphabetic character accurately across process boundaries.\par
+\clearpage
+\labexp{3.5}{Pipe-Based File Transfer Utility (Ex 3.27)}
+\textbf{Aim:} To stream file contents between a parent writer process and a child reader process through an OS pipe.\par
+\textbf{Theoretical Principle:} Pipe-mediated file transfer decouples disk reads in the producer process from disk writes in the consumer process, relying on kernel pipe buffering and EOF signaling upon write-end closure.\par
+\labsub{1. Source Code Implementation (\texttt{pipe\_filecopy.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_5.png}\\[4pt]
+  {\small\textit{Figure 3.9: Source Code Listing --- \texttt{pipe\_filecopy.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_5.png}\\[4pt]
+  {\small\textit{Figure 3.10: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Closing the pipe write handle delivers an EOF boundary to the child reader, finalizing an exact byte-for-byte file copy across processes.\par
+\clearpage
+\labexp{3.6}{UNIX Shell Project with History Recall \& I/O Redirection}
+\textbf{Aim:} To design an interactive command shell supporting command parsing, history recall (\texttt{!!}), and stdout redirection (\texttt{>}).\par
+\textbf{Theoretical Principle:} A command shell operates a Read-Eval-Print Loop (REPL): reading command lines, expanding history tokens (\texttt{!!}), parsing I/O redirection targets (\texttt{>}), and spawning child processes to execute system programs while waiting for completion.\par
+\labsub{1. Source Code Implementation (\texttt{joydev\_shell.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_6.png}\\[4pt]
+  {\small\textit{Figure 3.11: Source Code Listing --- \texttt{joydev\_shell.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_6.png}\\[4pt]
+  {\small\textit{Figure 3.12: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} \texttt{Joydev-Shell} implements the full REPL lifecycle, accurately expanding \texttt{!!} history commands and redirecting standard output streams to disk files.\par
+\clearpage
+\labexp{3.7}{Process \& Task Information Extraction Interface}
+\textbf{Aim:} To inspect active kernel task attributes (PID, PPID, current working directory, thread count, and platform metadata) for the running process.\par
+\textbf{Theoretical Principle:} Operating systems store per-process descriptors (\texttt{task\_struct} in Linux, \texttt{EPROCESS} in Windows) exposing PID, PPID, execution state, thread count, and virtual memory statistics to system monitoring utilities.\par
+\labsub{1. Source Code Implementation (\texttt{task\_info\_inspector.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_7.png}\\[4pt]
+  {\small\textit{Figure 3.13: Source Code Listing --- \texttt{task\_info\_inspector.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_7.png}\\[4pt]
+  {\small\textit{Figure 3.14: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Querying live OS process metadata directly exposes active task identifiers, thread counts, and host hardware concurrency attributes.\par
+\clearpage
+\labexp{3.8}{Operating System Task Traversal: Linear \& Depth-First Search (DFS) Tree Walk}
+\textbf{Aim:} To implement linear task-table iteration and recursive Depth-First Search (DFS) across an OS parent-child process tree.\par
+\textbf{Theoretical Principle:} Operating systems organize tasks into a rooted hierarchy anchored at the init/systemd process (PID 1). Linear traversal iterates across the flat task list, whereas DFS recursively expands each process's \texttt{children} adjacency pointers to reveal ancestor-descendant lineage.\par
+\labsub{1. Source Code Implementation (\texttt{process\_tree\_dfs.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_8.png}\\[4pt]
+  {\small\textit{Figure 3.15: Source Code Listing --- \texttt{process\_tree\_dfs.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_8.png}\\[4pt]
+  {\small\textit{Figure 3.16: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Recursive DFS faithfully reconstructs the hierarchical process genealogy from PID 1 down to leaf user tasks spawned inside \texttt{joydev-sh}.\par
+\clearpage
+\labexp{3.9}{Kernel Data Structures: Circular Doubly-Linked List}
+\textbf{Aim:} To construct and traverse a circular doubly-linked list modeled after the Linux kernel \texttt{struct list\_head} container.\par
+\textbf{Theoretical Principle:} OS kernels rely heavily on circular doubly-linked lists for ready queues, open-file lists, and slab caches because insertion and deletion at known nodes execute in $O(1)$ time with zero contiguous memory reallocation.\par
+\labsub{1. Source Code Implementation (\texttt{kernel\_circular\_list.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_3_9.png}\\[4pt]
+  {\small\textit{Figure 3.17: Source Code Listing --- \texttt{kernel\_circular\_list.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_3_9.png}\\[4pt]
+  {\small\textit{Figure 3.18: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Circular bidirectional pointer linking ensures symmetric $O(1)$ tail insertion and wrap-around traversal identical to Linux \texttt{list\_head} queues.\par
+
+\chapter{Threads \& Concurrency}
+\noindent\textit{Design and verification of multithreaded concurrent programs: parallel statistical workers, Monte Carlo stochastic approximation of $\pi$, concurrent 9$\times$9 Sudoku grid validation, and parallel divide-and-conquer merge sorting.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{4.1}{Multithreaded Statistical Computation Worker Threads (Ex 4.22)}
+\textbf{Aim:} To spawn three independent worker threads computing the arithmetic mean, minimum, and maximum of a shared dataset concurrently.\par
+\textbf{Theoretical Principle:} Threads within a single process share code, heap, and global data segments while maintaining private stacks and register contexts. Partitioning statistical reductions across concurrent worker threads eliminates IPC serialization overhead; \texttt{join()} ensures completion before reading results.\par
+\labsub{1. Source Code Implementation (\texttt{stats\_threads.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_4_1.png}\\[4pt]
+  {\small\textit{Figure 4.1: Source Code Listing --- \texttt{stats\_threads.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_4_1.png}\\[4pt]
+  {\small\textit{Figure 4.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} All three worker threads execute independently over shared memory and converge via \texttt{join()} without inter-process copying overhead.\par
+\clearpage
+\labexp{4.2}{Multithreaded Monte Carlo Approximation of Pi (Ex 4.24)}
+\textbf{Aim:} To approximate $\pi$ using a multithreaded Monte Carlo dart-throwing simulation synchronized via a mutex lock.\par
+\textbf{Theoretical Principle:} Sampling uniform random points $(x, y) \in [-1, 1] \times [-1, 1]$, the probability of falling inside the inscribed unit circle ($x^2 + y^2 \le 1$) equals $\pi / 4$. Distributing trials across $N$ worker threads and accumulating per-thread local counts under a single lock prevents lock contention.\par
+\labsub{1. Source Code Implementation (\texttt{monte\_carlo\_pi.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_4_2.png}\\[4pt]
+  {\small\textit{Figure 4.3: Source Code Listing --- \texttt{monte\_carlo\_pi.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_4_2.png}\\[4pt]
+  {\small\textit{Figure 4.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Thread-local accumulation followed by a single locked reduction minimizes mutex contention while converging accurately toward $\pi \approx 3.141593$.\par
+\clearpage
+\labexp{4.3}{Concurrent 9x9 Sudoku Solution Validator}
+\textbf{Aim:} To verify a $9\times 9$ Sudoku grid using 27 concurrent validation threads (9 rows, 9 columns, and 9 $3\times 3$ subgrids).\par
+\textbf{Theoretical Principle:} Decomposing constraint verification into 27 disjoint read-only validation tasks enables fine-grained thread-level parallelism. Each thread writes exclusively to its dedicated slot in a shared boolean status array, eliminating write-write data races.\par
+\labsub{1. Source Code Implementation (\texttt{sudoku\_validator.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_4_3.png}\\[4pt]
+  {\small\textit{Figure 4.5: Source Code Listing --- \texttt{sudoku\_validator.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_4_3.png}\\[4pt]
+  {\small\textit{Figure 4.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} All 27 independent worker threads verify rows, columns, and $3\times 3$ regions concurrently with zero shared write conflicts.\par
+\clearpage
+\labexp{4.4}{Multithreaded Parallel Divide-and-Conquer Sorting}
+\textbf{Aim:} To implement parallel merge sort where worker threads independently sort disjoint array halves prior to a linear parent merge.\par
+\textbf{Theoretical Principle:} Partitioning an array of $N$ elements into two halves of size $N/2$ lets two worker threads sort their respective partitions in parallel without synchronization. Once both threads join, the parent merges the sorted halves in $O(N)$ linear time.\par
+\labsub{1. Source Code Implementation (\texttt{parallel\_merge\_sort.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_4_4.png}\\[4pt]
+  {\small\textit{Figure 4.7: Source Code Listing --- \texttt{parallel\_merge\_sort.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_4_4.png}\\[4pt]
+  {\small\textit{Figure 4.8: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Disjoint sub-array partitioning enables lock-free parallel sorting followed by deterministic $O(N)$ merge consolidation.\par
+
+\chapter{CPU Scheduling Algorithms}
+\noindent\textit{Analytical implementation and quantitative comparison of non-preemptive (FCFS, SJF) and preemptive Round-Robin (RR) CPU scheduling policies across waiting time and turnaround time.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{5.1}{Non-Preemptive Scheduling: FCFS and Shortest Job First (SJF)}
+\textbf{Aim:} To simulate First-Come First-Served (FCFS) and Shortest Job First (SJF) scheduling and compare Average Waiting Time (WT) and Turnaround Time (TAT).\par
+\textbf{Theoretical Principle:} FCFS dispatches processes strictly by arrival order, risking the convoy effect when long CPU bursts precede short jobs. Non-preemptive SJF orders ready processes by ascending burst duration, provably minimizing average waiting time for simultaneous arrivals.\par
+\labsub{1. Source Code Implementation (\texttt{fcfs\_sjf\_sched.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_5_1.png}\\[4pt]
+  {\small\textit{Figure 5.1: Source Code Listing --- \texttt{fcfs\_sjf\_sched.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_5_1.png}\\[4pt]
+  {\small\textit{Figure 5.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} SJF lowers average waiting time substantially compared to FCFS by eliminating convoy delays ahead of short burst processes.\par
+\clearpage
+\labexp{5.2}{Preemptive Round-Robin (RR) CPU Scheduling Simulation}
+\textbf{Aim:} To implement preemptive Round-Robin scheduling with time quantum $q = 3$, tracing dispatch intervals and computing average turnaround time.\par
+\textbf{Theoretical Principle:} Round-Robin allocates each runnable process a bounded time quantum $q$ in cyclic FIFO order. Processes exceeding $q$ are preempted and re-enqueued at the tail, guaranteeing bounded response latency and starvation-free fairness.\par
+\labsub{1. Source Code Implementation (\texttt{round\_robin\_sched.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_5_2.png}\\[4pt]
+  {\small\textit{Figure 5.3: Source Code Listing --- \texttt{round\_robin\_sched.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_5_2.png}\\[4pt]
+  {\small\textit{Figure 5.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Round-Robin delivers equitable cyclic CPU sharing across all four processes without starvation, bounding interactive response delay to at most $(n-1)q$.\par
+
+\chapter{Synchronization Tools \& Hardware Primitives}
+\noindent\textit{Analysis of critical-section hazards, race conditions, and mutual exclusion enforcement using atomic mutex locks over a finite kernel resource pool.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{6.1}{Mutual Exclusion \& Critical Section Protection with Finite Resources (Ex 6.33)}
+\textbf{Aim:} To safeguard concurrent reservation and release operations on a finite resource pool using a mutex lock.\par
+\textbf{Theoretical Principle:} When multiple threads check and decrement a shared counter without synchronization, interleaved read-modify-write sequences cause race conditions and negative over-allocation. Enclosing check-and-update transitions inside a mutex critical section upholds mutual exclusion, progress, and invariant safety.\par
+\labsub{1. Source Code Implementation (\texttt{finite\_resources\_mutex.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_6_1.png}\\[4pt]
+  {\small\textit{Figure 6.1: Source Code Listing --- \texttt{finite\_resources\_mutex.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_6_1.png}\\[4pt]
+  {\small\textit{Figure 6.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Mutex locking serializes resource inspection and decrement operations atomically, rejecting over-allocation requests cleanly and maintaining non-negative pool invariants.\par
+
+\chapter{Classic Synchronization Examples}
+\noindent\textit{Implementation and verification of classical concurrency patterns: Bounded-Buffer Producer-Consumer, Readers-Writers mutual exclusion, and Deadlock-Free Dining Philosophers.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{7.1}{The Bounded-Buffer Producer-Consumer Problem (Lab 7.01)}
+\textbf{Aim:} To construct a thread-safe bounded buffer coordinated by mutex locks and condition variables.\par
+\textbf{Theoretical Principle:} Producers deposit items into a fixed-capacity buffer while consumers extract them. Condition variables block producers whenever the buffer reaches capacity $N$ and block consumers when empty, preventing both overflow and busy-waiting.\par
+\labsub{1. Source Code Implementation (\texttt{bounded\_buffer.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_7_1.png}\\[4pt]
+  {\small\textit{Figure 7.1: Source Code Listing --- \texttt{bounded\_buffer.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_7_1.png}\\[4pt]
+  {\small\textit{Figure 7.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Paired condition variables and mutex guards coordinate concurrent producers and consumers strictly within the 4-slot capacity boundary.\par
+\clearpage
+\labexp{7.2}{The Readers-Writers Synchronization Problem (Lab 7.02)}
+\textbf{Aim:} To simulate the first Readers-Writers policy permitting concurrent reads while guaranteeing exclusive writer access.\par
+\textbf{Theoretical Principle:} Multiple readers may safely inspect shared state simultaneously, whereas writers require exclusive access. The first entering reader acquires \texttt{rw\_lock} and the last exiting reader releases it, serializing writers without blocking concurrent readers.\par
+\labsub{1. Source Code Implementation (\texttt{readers\_writers.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_7_2.png}\\[4pt]
+  {\small\textit{Figure 7.3: Source Code Listing --- \texttt{readers\_writers.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_7_2.png}\\[4pt]
+  {\small\textit{Figure 7.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Concurrent readers execute simultaneously with high throughput, while the writer acquires exclusive access cleanly before modifying shared state to 298.\par
+\clearpage
+\labexp{7.3}{The Dining Philosophers Problem with Deadlock Avoidance (Lab 7.03)}
+\textbf{Aim:} To eliminate circular-wait deadlock in the Dining Philosophers problem via asymmetric resource lock ordering.\par
+\textbf{Theoretical Principle:} If all five philosophers grab their left chopstick simultaneously, Coffman's circular-wait condition causes permanent deadlock. Enforcing an asymmetric lock order (even philosophers acquire left-then-right; odd philosophers acquire right-then-left) breaks circular wait mathematically.\par
+\labsub{1. Source Code Implementation (\texttt{dining\_philosophers.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_7_3.png}\\[4pt]
+  {\small\textit{Figure 7.5: Source Code Listing --- \texttt{dining\_philosophers.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_7_3.png}\\[4pt]
+  {\small\textit{Figure 7.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Asymmetric fork acquisition breaks circular wait completely, ensuring every philosopher eats and terminates cleanly.\par
+
+\chapter{Deadlocks: Prevention, Avoidance \& Detection}
+\noindent\textit{Algorithmic modeling of Coffman deadlock conditions, Dijkstra's Banker's safety algorithm, Wait-For Graph cycle detection, and strict global resource hierarchy prevention.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{8.1}{Deadlock Avoidance via Banker's Algorithm (Lab 8.01)}
+\textbf{Aim:} To implement Dijkstra's Banker's safety test determining whether a multi-resource allocation state is safe and computing a safe execution sequence.\par
+\textbf{Theoretical Principle:} A system state is safe if there exists a sequence $\langle P_{i_1}, P_{i_2}, \dots, P_{i_n} \rangle$ such that each process's remaining need $\text{Need}[i] = \text{Max}[i] - \text{Alloc}[i]$ can be satisfied by $\text{Work}$ plus resources released by previously completed processes.\par
+\labsub{1. Source Code Implementation (\texttt{bankers\_algorithm.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_8_1.png}\\[4pt]
+  {\small\textit{Figure 8.1: Source Code Listing --- \texttt{bankers\_algorithm.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_8_1.png}\\[4pt]
+  {\small\textit{Figure 8.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The safety algorithm verifies that all five processes can finish without deadlock along the safe sequence \texttt{P1 -> P3 -> P4 -> P0 -> P2}.\par
+\clearpage
+\labexp{8.2}{Deadlock Detection via Wait-For Graph Cycle Detection (Lab 8.02)}
+\textbf{Aim:} To detect circular wait deadlocks by finding directed cycles inside a process Wait-For Graph (WFG) using DFS.\par
+\textbf{Theoretical Principle:} For single-instance resource classes, a deadlock exists if and only if the Wait-For Graph contains a directed cycle. Tracking the active recursion stack during Depth-First Search identifies back-edges constituting circular wait in $O(V + E)$ time.\par
+\labsub{1. Source Code Implementation (\texttt{deadlock\_detection.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_8_2.png}\\[4pt]
+  {\small\textit{Figure 8.3: Source Code Listing --- \texttt{deadlock\_detection.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_8_2.png}\\[4pt]
+  {\small\textit{Figure 8.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} DFS recursion stack tracking flags the directed back-edge \texttt{P3 -> P1}, confirming a circular wait deadlock among processes P1, P2, and P3.\par
+\clearpage
+\labexp{8.3}{Deadlock Prevention via Strict Global Resource Ordering (Lab 8.03)}
+\textbf{Aim:} To enforce Havender's strict total ordering $F: R \to \mathbb{N}$ on resource acquisitions to prevent circular wait.\par
+\textbf{Theoretical Principle:} Havender proved that assigning a global numerical rank to every resource class and requiring processes to request resources strictly in ascending rank order guarantees that no cycle can ever form in the resource-allocation graph.\par
+\labsub{1. Source Code Implementation (\texttt{deadlock\_prevention.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_8_3.png}\\[4pt]
+  {\small\textit{Figure 8.5: Source Code Listing --- \texttt{deadlock\_prevention.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_8_3.png}\\[4pt]
+  {\small\textit{Figure 8.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Monotonic rank enforcement immediately blocks the out-of-order request for \texttt{Disk} (Rank 1 $\le$ 3), making circular wait structurally impossible.\par
+
+\chapter{Main Memory Management}
+\noindent\textit{Architectural modeling of physical memory allocation: fixed-partition internal fragmentation, dynamic contiguous placement (First-Fit, Best-Fit, Worst-Fit), and paged logical-to-physical address translation.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{9.1}{Fixed Partition Memory Allocation \& Internal Fragmentation (Lab 9.01)}
+\textbf{Aim:} To simulate static fixed-partition memory allocation and quantify total internal fragmentation.\par
+\textbf{Theoretical Principle:} In fixed partitioning, RAM is divided into static slots at boot time. Any residual memory between a process's size and its assigned partition size remains unusable inside the slot, creating internal fragmentation.\par
+\labsub{1. Source Code Implementation (\texttt{fixed\_partition.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_9_1.png}\\[4pt]
+  {\small\textit{Figure 9.1: Source Code Listing --- \texttt{fixed\_partition.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_9_1.png}\\[4pt]
+  {\small\textit{Figure 9.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Fixed partitioning executes in linear time but wastes 275 KB to internal fragmentation and rejects the 450 KB process even when aggregate unused RAM exceeds 450 KB.\par
+\clearpage
+\labexp{9.2}{Dynamic Partition Allocation: First-Fit, Best-Fit \& Worst-Fit (Lab 9.02)}
+\textbf{Aim:} To compare First-Fit, Best-Fit, and Worst-Fit dynamic contiguous placement policies across identical memory holes.\par
+\textbf{Theoretical Principle:} Dynamic partitioning allocates exact request sizes from variable holes. First-Fit chooses the first sufficient hole; Best-Fit selects the tightest fitting hole to preserve large blocks; Worst-Fit carves from the largest hole to avoid tiny unusable slivers.\par
+\labsub{1. Source Code Implementation (\texttt{dynamic\_allocation.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_9_2.png}\\[4pt]
+  {\small\textit{Figure 9.3: Source Code Listing --- \texttt{dynamic\_allocation.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_9_2.png}\\[4pt]
+  {\small\textit{Figure 9.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Best-Fit accommodates all 4 processes cleanly (4/4), whereas First-Fit and Worst-Fit leave P4 (426 KB) unallocated due to external fragmentation.\par
+\clearpage
+\labexp{9.3}{Paging \& Logical-to-Physical Address Translation (Lab 9.03)}
+\textbf{Aim:} To translate logical byte addresses $(p, d)$ into physical frame addresses $(f, d)$ using a Page Table and detect page faults.\par
+\textbf{Theoretical Principle:} For page size $S = 2^m$ bytes, logical address $A$ decomposes into page number $p = \lfloor A / S \rfloor$ and offset $d = A \bmod S$. The MMU indexes the Page Table to locate physical frame $f$ and forms $\text{Physical Address} = f \cdot S + d$, raising a page fault if $p$ is unmapped.\par
+\labsub{1. Source Code Implementation (\texttt{page\_translation.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_9_3.png}\\[4pt]
+  {\small\textit{Figure 9.5: Source Code Listing --- \texttt{page\_translation.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_9_3.png}\\[4pt]
+  {\small\textit{Figure 9.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Paging transparently maps non-contiguous physical frames into a contiguous logical address space and traps unmapped accesses as page faults.\par
+
+\chapter{Virtual Memory \& Page Replacement}
+\noindent\textit{Comparative simulation of demand-paging replacement policies: FIFO, LRU, Belady's Optimal algorithm, Belady's Anomaly benchmarking, and Working-Set thrashing analysis.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{10.1}{First-In First-Out (FIFO) Page Replacement (Lab 10.01)}
+\textbf{Aim:} To simulate FIFO page replacement over a reference string and compute total page faults and hit ratio.\par
+\textbf{Theoretical Principle:} FIFO maintains resident frames in arrival order, evicting the oldest loaded page on each miss without considering recent usage frequency.\par
+\labsub{1. Source Code Implementation (\texttt{fifo\_replacement.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_10_1.png}\\[4pt]
+  {\small\textit{Figure 10.1: Source Code Listing --- \texttt{fifo\_replacement.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_10_1.png}\\[4pt]
+  {\small\textit{Figure 10.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} FIFO incurs 15 page faults (25.00\% hit ratio) because it evicts frequently reused pages purely based on their initial load age.\par
+\clearpage
+\labexp{10.2}{Least Recently Used (LRU) Page Replacement (Lab 10.02)}
+\textbf{Aim:} To implement LRU page replacement tracking per-page recency timestamps and measure hit ratio gains.\par
+\textbf{Theoretical Principle:} LRU leverages temporal locality by evicting the resident page with the smallest last-access timestamp, approximating Optimal replacement using observable execution history.\par
+\labsub{1. Source Code Implementation (\texttt{lru\_replacement.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_10_2.png}\\[4pt]
+  {\small\textit{Figure 10.3: Source Code Listing --- \texttt{lru\_replacement.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_10_2.png}\\[4pt]
+  {\small\textit{Figure 10.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} LRU reduces page faults from 15 to 12 (improving hit ratio from 25\% to 40\%) by retaining temporally active pages in physical memory.\par
+\clearpage
+\labexp{10.3}{Belady's Optimal Page Replacement Algorithm (Lab 10.03)}
+\textbf{Aim:} To implement Belady's theoretical Optimal algorithm evicting the page needed farthest in the future.\par
+\textbf{Theoretical Principle:} Belady's Optimal policy achieves the theoretical lower bound on page faults for any reference string by inspecting future accesses. Though unrealizable online, it provides the gold-standard benchmark for evaluating practical policies.\par
+\labsub{1. Source Code Implementation (\texttt{optimal\_replacement.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_10_3.png}\\[4pt]
+  {\small\textit{Figure 10.5: Source Code Listing --- \texttt{optimal\_replacement.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_10_3.png}\\[4pt]
+  {\small\textit{Figure 10.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Optimal replacement achieves the minimum ceiling of 9 page faults (55.00\% hit ratio), establishing the upper efficiency bound for the workload.\par
+\clearpage
+\labexp{10.4}{Comparative Page Fault Benchmark \& Belady's Anomaly (Lab 10.04)}
+\textbf{Aim:} To benchmark FIFO, LRU, and Optimal across 3 vs. 4 physical frames on Belady's anomaly string.\par
+\textbf{Theoretical Principle:} For the classic sequence \texttt{1,2,3,4,1,2,5,1,2,3,4,5}, FIFO suffers Belady's Anomaly: increasing allocated RAM from 3 to 4 frames raises faults from 9 to 10. Stack algorithms (LRU, Optimal) satisfy the inclusion property and are mathematically immune to this anomaly.\par
+\labsub{1. Source Code Implementation (\texttt{belady\_benchmark.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_10_4.png}\\[4pt]
+  {\small\textit{Figure 10.7: Source Code Listing --- \texttt{belady\_benchmark.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_10_4.png}\\[4pt]
+  {\small\textit{Figure 10.8: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Live execution proves FIFO increases from 9 to 10 faults when given a fourth frame, while stack algorithms (LRU: 10 $\to$ 8; Optimal: 7 $\to$ 6) monotonically improve.\par
+\clearpage
+\labexp{10.5}{Thrashing \& Working-Set Model Simulation (Lab 10.05)}
+\textbf{Aim:} To model virtual memory thrashing when aggregate working-set demand exceeds available physical frames.\par
+\textbf{Theoretical Principle:} Denning's Working-Set Model states that if total working-set demand $D = \sum_i WSS_i$ exceeds physical RAM frames $m$, processes continuously fault and swap pages, causing CPU utilization to collapse into severe thrashing.\par
+\labsub{1. Source Code Implementation (\texttt{thrashing\_sim.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_10_5.png}\\[4pt]
+  {\small\textit{Figure 10.9: Source Code Listing --- \texttt{thrashing\_sim.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_10_5.png}\\[4pt]
+  {\small\textit{Figure 10.10: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Once aggregate working-set demand exceeds 10 frames (at 5--6 concurrent processes), page-fault rates spike to 98\% and effective CPU utilization collapses from 82.0\% down to 4.0\%.\par
+
+\chapter{Mass-Storage Structure \& Disk Scheduling}
+\noindent\textit{Analysis of electromechanical secondary storage geometries, disk arm seek optimization algorithms (FCFS, SSTF, SCAN, C-SCAN, LOOK), and quantitative HDD access latency modeling.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{11.1}{Disk Arm Scheduling Algorithms (FCFS, SSTF, SCAN, C-SCAN, LOOK) (Lab 11.01)}
+\textbf{Aim:} To implement and compare five classical disk head scheduling policies (FCFS, SSTF, SCAN, C-SCAN, and LOOK) by total cylinder head movement.\par
+\textbf{Theoretical Principle:} Mechanical hard disk drives suffer high seek latency proportional to radial head travel across cylinders. While First-Come First-Served (FCFS) preserves arrival order, Shortest Seek Time First (SSTF) greedily minimizes immediate seek distance at the risk of starvation. Elevator algorithms (SCAN, C-SCAN, and LOOK) sweep directionally to guarantee bounded wait times and high throughput.\par
+\labsub{1. Source Code Implementation (\texttt{disk\_scheduling.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_11_1.png}\\[4pt]
+  {\small\textit{Figure 11.1: Source Code Listing --- \texttt{disk\_scheduling.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_11_1.png}\\[4pt]
+  {\small\textit{Figure 11.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} SSTF achieves the lowest seek distance (236 cylinders) compared to FCFS (640 cylinders), while LOOK eliminates wasted boundary travel to cylinder 199 (299 cylinders vs. 331 for SCAN).\par
+\clearpage
+\labexp{11.2}{Hard Disk Drive Access Latency Modeling (Lab 11.02)}
+\textbf{Aim:} To analytically model total HDD access latency from seek time, rotational delay, and media transfer time across different drive classes.\par
+\textbf{Theoretical Principle:} Total electromechanical access latency is governed by $T_{\text{access}} = T_{\text{seek}} + T_{\text{rot}} + T_{\text{transfer}}$. Average rotational latency equals half a platter revolution: $T_{\text{rot}} = \frac{1}{2 \cdot \text{RPM}} \times 60 \times 1000\text{ ms}$, while transfer time scales with payload size and sustained bandwidth: $T_{\text{transfer}} = \frac{\text{Transfer Size}}{\text{Transfer Rate}}$.\par
+\labsub{1. Source Code Implementation (\texttt{hdd\_latency\_model.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_11_2.png}\\[4pt]
+  {\small\textit{Figure 11.3: Source Code Listing --- \texttt{hdd\_latency\_model.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_11_2.png}\\[4pt]
+  {\small\textit{Figure 11.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} For 64 KB random reads, mechanical seek and rotational latencies dominate over 95\% of total access time; increasing spindle speed from 5400 to 15000 RPM boosts random IOPS by over 3.5x.\par
+
+\chapter{I/O Systems \& Device Management}
+\noindent\textit{Kernel I/O subsystem design including priority-aware device driver request queues, double buffering overlap, buffer cache hit-rate modeling, and asynchronous print spooling.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{12.1}{I/O Request Scheduling \& Device Driver Queue Management (Lab 12.01)}
+\textbf{Aim:} To simulate a multi-priority kernel I/O request queue comparing FIFO dispatching against priority-ordered driver scheduling.\par
+\textbf{Theoretical Principle:} The kernel I/O subsystem decouples user applications from slow peripheral controllers via per-device request queues. Priority-aware I/O schedulers elevate latency-critical interactive and paging requests ahead of background bulk writes, minimizing tail latency.\par
+\labsub{1. Source Code Implementation (\texttt{io\_queue\_manager.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_12_1.png}\\[4pt]
+  {\small\textit{Figure 12.1: Source Code Listing --- \texttt{io\_queue\_manager.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_12_1.png}\\[4pt]
+  {\small\textit{Figure 12.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Priority-ordered I/O scheduling reduces average request wait time from 17.40 ms to 9.20 ms and serves critical page-in operations in 0--5 ms instead of blocking behind bulk log writes.\par
+\clearpage
+\labexp{12.2}{Double Buffering, Cache Hit-Rate \& Print Spooling (Lab 12.02)}
+\textbf{Aim:} To simulate double-buffered I/O overlap, block cache hit performance, and a FIFO print spooler queue.\par
+\textbf{Theoretical Principle:} Double buffering alternates between two memory buffers so DMA hardware fills one buffer while the CPU processes the other concurrently. Spooling stages output jobs for non-sharable devices (such as printers) onto disk so producing processes do not stall awaiting slow mechanical output.\par
+\labsub{1. Source Code Implementation (\texttt{io\_buffering\_spooler.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_12_2.png}\\[4pt]
+  {\small\textit{Figure 12.3: Source Code Listing --- \texttt{io\_buffering\_spooler.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_12_2.png}\\[4pt]
+  {\small\textit{Figure 12.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Overlapping DMA transfers with CPU processing via double buffering reduces 5-block execution time from 50 ms to 34 ms (1.47x speedup), while the spooler decouples user processes from printer speed.\par
+
+\chapter{File-System Interface}
+\noindent\textit{Practical inspection of file-system metadata structures via live OS \texttt{stat()} calls and canonical hierarchical directory tree path resolution.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{13.1}{Hierarchical Directory Traversal \& Inode Metadata Extraction (Lab 13.01)}
+\textbf{Aim:} To inspect real file-system inode numbers, permission mode strings, link counts, and byte sizes using the \texttt{os.stat()} system call interface.\par
+\textbf{Theoretical Principle:} Operating systems decouple human-readable directory filenames from physical file metadata stored in index nodes (inodes) or Master File Table (MFT) records. Invoking \texttt{stat()} queries the VFS layer for unique inode identifiers, file mode bits, byte size, hard-link count, and timestamps.\par
+\labsub{1. Source Code Implementation (\texttt{inode\_inspector.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_13_1.png}\\[4pt]
+  {\small\textit{Figure 13.1: Source Code Listing --- \texttt{inode\_inspector.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_13_1.png}\\[4pt]
+  {\small\textit{Figure 13.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Live \texttt{os.stat()} invocation retrieves genuine kernel file identifiers, permission mode masks, hard-link counts, byte sizes, and modification timestamps for every file in the working directory.\par
+\clearpage
+\labexp{13.2}{Virtual Hierarchical Directory Tree \& Path Resolution Engine (Lab 13.02)}
+\textbf{Aim:} To construct an in-memory tree-structured file system and resolve relative, parent (\texttt{..}), and current (\texttt{.}) path segments canonically.\par
+\textbf{Theoretical Principle:} Hierarchical file systems organize directories as a rooted directed tree. Path resolution walks path components from the root or working directory, collapsing redundant \texttt{.} references and popping parent nodes on \texttt{..} while enforcing directory existence invariants.\par
+\labsub{1. Source Code Implementation (\texttt{path\_resolver.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_13_2.png}\\[4pt]
+  {\small\textit{Figure 13.3: Source Code Listing --- \texttt{path\_resolver.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_13_2.png}\\[4pt]
+  {\small\textit{Figure 13.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The path engine canonically collapses \texttt{.} and \texttt{..} traversal components and accurately distinguishes existing files, directories, and \texttt{ENOENT} lookup failures.\par
+
+\chapter{File-System Implementation}
+\noindent\textit{On-disk block allocation strategies (Contiguous, Linked, and Indexed) and kernel free-space tracking using bitmaps (bit vectors) and linked free-block lists.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{14.1}{File Allocation Methods (Contiguous, Linked \& Indexed) (Lab 14.01)}
+\textbf{Aim:} To simulate contiguous, linked, and indexed disk block allocation and contrast random-access capability against external fragmentation.\par
+\textbf{Theoretical Principle:} Contiguous allocation offers optimal sequential and random access but suffers external fragmentation when files grow. Linked allocation eliminates external fragmentation by chaining blocks with pointers at the cost of $O(n)$ random-access traversal. Indexed allocation gathers all block pointers into an index block, enabling $O(1)$ direct access without contiguous space constraints.\par
+\labsub{1. Source Code Implementation (\texttt{file\_allocation.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_14_1.png}\\[4pt]
+  {\small\textit{Figure 14.1: Source Code Listing --- \texttt{file\_allocation.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_14_1.png}\\[4pt]
+  {\small\textit{Figure 14.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Contiguous allocation requires finding a single free span [12..15], whereas linked and indexed strategies utilize scattered free blocks seamlessly, with indexed allocation preserving $O(1)$ random access.\par
+\clearpage
+\labexp{14.2}{Disk Free Space Management via Bit Vectors \& Free Lists (Lab 14.02)}
+\textbf{Aim:} To implement bitmap (bit-vector) and linked free-list disk block allocators and verify block allocation and reclamation.\par
+\textbf{Theoretical Principle:} A bit vector represents each disk block with a single bit (1 = free, 0 = allocated), allowing fast hardware-accelerated scanning for contiguous runs. A free list links all unallocated blocks together, eliminating dedicated bitmap storage overhead when free space is sparse.\par
+\labsub{1. Source Code Implementation (\texttt{free\_space\_mgmt.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_14_2.png}\\[4pt]
+  {\small\textit{Figure 14.3: Source Code Listing --- \texttt{free\_space\_mgmt.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_14_2.png}\\[4pt]
+  {\small\textit{Figure 14.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Bit-vector state transitions track allocations and releases in $O(1)$ space per block, while the linked free list directly enumerates all 10 remaining unallocated blocks after reclamation.\par
+
+\chapter{File-System Internals \& Reliability}
+\noindent\textit{In-memory unified buffer cache management with LRU write-back eviction and Write-Ahead Logging (WAL) journaling recovery to survive abrupt power-loss crashes.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{15.1}{Unified Buffer Cache Simulation with LRU Page Eviction (Lab 15.01)}
+\textbf{Aim:} To implement a kernel unified buffer cache using an OrderedDict-backed LRU policy with dirty-block write-back tracking.\par
+\textbf{Theoretical Principle:} Modern kernels unify the file buffer cache and virtual memory page cache to avoid double caching. Modified (dirty) blocks remain buffered in RAM to coalesce writes and are flushed to disk only upon periodic sync or LRU eviction.\par
+\labsub{1. Source Code Implementation (\texttt{buffer\_cache\_lru.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_15_1.png}\\[4pt]
+  {\small\textit{Figure 15.1: Source Code Listing --- \texttt{buffer\_cache\_lru.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_15_1.png}\\[4pt]
+  {\small\textit{Figure 15.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The LRU buffer cache absorbs repeated reads to Block 10 and flushes Block 11 to backing storage only when evicted as a dirty victim, minimizing synchronous disk writes.\par
+\clearpage
+\labexp{15.2}{Journaling File System Simulation \& Crash Consistency Recovery (Lab 15.02)}
+\textbf{Aim:} To simulate Write-Ahead Logging (WAL) transactions (ext4/NTFS style) and demonstrate atomic crash recovery by replaying committed transactions and discarding uncommitted writes.\par
+\textbf{Theoretical Principle:} Metadata updates span multiple disk blocks; a crash mid-update leaves traditional file systems inconsistent. Journaling file systems record changes sequentially in a circular log (journal) before checkpointing them to home locations. On reboot, committed transactions (\texttt{TX\_COMMIT}) are replayed idempotently while incomplete transactions are discarded.\par
+\labsub{1. Source Code Implementation (\texttt{journaling\_fs.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_15_2.png}\\[4pt]
+  {\small\textit{Figure 15.3: Source Code Listing --- \texttt{journaling\_fs.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_15_2.png}\\[4pt]
+  {\small\textit{Figure 15.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} During reboot recovery, committed transaction \texttt{TX-01} is replayed atomically while interrupted transaction \texttt{TX-02} is safely discarded, preserving file-system consistency.\par
+
+\chapter{Security: Authentication \& Access Control}
+\noindent\textit{Cryptographically salted PBKDF2-HMAC-SHA256 user authentication resistant to rainbow-table attacks and Role-Based Access Control (RBAC) enforcing the Principle of Least Privilege.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{16.1}{Secure Authentication via Cryptographic Salted Password Hashing (Lab 16.01)}
+\textbf{Aim:} To implement salted PBKDF2-HMAC-SHA256 password storage with constant-time verification using Python's \texttt{hashlib}, \texttt{os.urandom}, and \texttt{hmac} modules.\par
+\textbf{Theoretical Principle:} Storing plaintext or unsalted digests exposes credentials to precomputed rainbow tables. Appending a cryptographically random per-user salt $S \in \{0,1\}^{128}$ and iterating a key-derivation function $\text{PBKDF2}(\text{SHA256}, P, S, c)$ guarantees unique digests even for identical passwords while throttling brute-force guessing.\par
+\labsub{1. Source Code Implementation (\texttt{salted\_auth.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_16_1.png}\\[4pt]
+  {\small\textit{Figure 16.1: Source Code Listing --- \texttt{salted\_auth.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_16_1.png}\\[4pt]
+  {\small\textit{Figure 16.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Even though \texttt{joydev} and \texttt{lab\_clone} share the exact same password, distinct 128-bit random salts produce completely different digests, and constant-time comparison prevents timing side channels.\par
+\clearpage
+\labexp{16.2}{Role-Based Access Control (RBAC) \& Least Privilege Enforcement (Lab 16.02)}
+\textbf{Aim:} To implement a Role-Based Access Control policy monitor enforcing permission separation across administrative, student, auditor, and guest roles.\par
+\textbf{Theoretical Principle:} Role-Based Access Control (RBAC) assigns permissions to functional roles rather than individual identities. Users inherit only the minimal privileges required by their assigned roles, upholding the Principle of Least Privilege and simplifying enterprise security auditing.\par
+\labsub{1. Source Code Implementation (\texttt{rbac\_enforcer.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_16_2.png}\\[4pt]
+  {\small\textit{Figure 16.3: Source Code Listing --- \texttt{rbac\_enforcer.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_16_2.png}\\[4pt]
+  {\small\textit{Figure 16.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The RBAC monitor grants \texttt{joydev} lab submission rights while strictly denying unauthorized grade modification and kernel deployment attempts, enforcing least privilege.\par
+
+\chapter{Protection: Access Matrix \& Capability Systems}
+\noindent\textit{Formal OS protection modeling via Lampson's Access Matrix with dynamic domain switching and cryptographically authenticated capability lists (C-Lists).}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{17.1}{Protection Domains \& the Access Matrix Model (Lab 17.01)}
+\textbf{Aim:} To implement Lampson's Access Matrix supporting domain-to-object right verification, copy flags, and controlled domain switching.\par
+\textbf{Theoretical Principle:} In Lampson's protection model, rows represent Protection Domains ($D_1, D_2, \dots$) and columns represent system Objects (files, devices, or other domains). Entry $A[D_i, O_j]$ holds the authorized operations; a \texttt{switch} right in $A[D_i, D_k]$ authorizes controlled privilege transitions.\par
+\labsub{1. Source Code Implementation (\texttt{access\_matrix.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_17_1.png}\\[4pt]
+  {\small\textit{Figure 17.1: Source Code Listing --- \texttt{access\_matrix.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_17_1.png}\\[4pt]
+  {\small\textit{Figure 17.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} User domain \texttt{D\_USER} is blocked from writing \texttt{sys\_cfg} until exercising its authorized \texttt{switch} right into \texttt{D\_KERNEL}, mirroring kernel syscall privilege elevation.\par
+\clearpage
+\labexp{17.2}{Capability-Based Security \& Capability Lists (Lab 17.02)}
+\textbf{Aim:} To implement unforgeable capability tokens sealed with kernel HMAC-SHA256 tags and verify tamper detection.\par
+\textbf{Theoretical Principle:} Decomposing the Access Matrix by rows yields per-process Capability Lists (C-Lists). Each capability pairs an object identifier with granted rights and a kernel-sealed cryptographic MAC, preventing confused-deputy attacks and unauthorized privilege escalation.\par
+\labsub{1. Source Code Implementation (\texttt{capability\_tokens.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_17_2.png}\\[4pt]
+  {\small\textit{Figure 17.3: Source Code Listing --- \texttt{capability\_tokens.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_17_2.png}\\[4pt]
+  {\small\textit{Figure 17.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Genuine capability checks enforce exact granted rights, while tampering with the rights field immediately invalidates the HMAC-SHA256 seal and triggers rejection.\par
+
+\chapter{Virtual Machines \& Hypervisors}
+\noindent\textit{Hardware-assisted virtualization mechanisms including two-level Extended Page Table (EPT) memory translation and dynamic hypervisor memory ballooning.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{18.1}{Two-Level Virtual Memory Translation in Hypervisors (Lab 18.01)}
+\textbf{Aim:} To simulate two-dimensional hypervisor address translation from Guest Virtual Address (GVA) to Guest Physical Address (GPA) to Host Physical Address (HPA).\par
+\textbf{Theoretical Principle:} Under hardware-assisted virtualization (Intel EPT / AMD RVI), guest page tables map Guest Virtual Addresses (GVA) to Guest Physical Addresses (GPA), and the hypervisor's Extended Page Table maps GPAs to true Host Physical Addresses (HPA): $\text{GVA} \xrightarrow{\text{Guest PT}} \text{GPA} \xrightarrow{\text{EPT}} \text{HPA}$.\par
+\labsub{1. Source Code Implementation (\texttt{ept\_translation.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_18_1.png}\\[4pt]
+  {\small\textit{Figure 18.1: Source Code Listing --- \texttt{ept\_translation.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_18_1.png}\\[4pt]
+  {\small\textit{Figure 18.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Each valid guest virtual address preserves its 12-bit page offset across both translation stages ($\text{GVA} \to \text{GPA} \to \text{HPA}$), while unmapped VPN 4 triggers a Guest Page Fault.\par
+\clearpage
+\labexp{18.2}{Hypervisor Dynamic Resource Allocation \& Memory Ballooning (Lab 18.02)}
+\textbf{Aim:} To simulate hypervisor memory reclamation via balloon drivers inflating inside idle VMs to satisfy burst memory demand in active VMs.\par
+\textbf{Theoretical Principle:} Hypervisors achieve memory overcommitment safely by installing a paravirtualized balloon driver inside each guest OS. Under host memory pressure, the hypervisor instructs idle guests to inflate their balloons, pinning and surrendering unused guest pages back to the host pool without crashing guests.\par
+\labsub{1. Source Code Implementation (\texttt{vm\_ballooning.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_18_2.png}\\[4pt]
+  {\small\textit{Figure 18.3: Source Code Listing --- \texttt{vm\_ballooning.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_18_2.png}\\[4pt]
+  {\small\textit{Figure 18.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Inflating \texttt{VM-Idle}'s balloon reclaims 1024 MB of idle physical RAM cleanly and reallocates it to \texttt{VM-Web} without triggering host-level swapping or guest out-of-memory faults.\par
+
+\chapter{Distributed Systems \& Synchronization}
+\noindent\textit{Core distributed coordination algorithms operating without shared physical clocks: Lamport logical timestamps, Ricart-Agrawala distributed mutual exclusion, and Bully leader election.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{19.1}{Lamport Logical Clocks \& Distributed Event Ordering (Lab 19.01)}
+\textbf{Aim:} To implement Lamport's scalar logical clock rules and verify causal happens-before ($a \to b$) ordering across three distributed nodes.\par
+\textbf{Theoretical Principle:} Without globally synchronized hardware clocks, Lamport clocks assign monotonic logical timestamps $C(e)$ satisfying $a \to b \implies C(a) < C(b)$. Local events increment $C_i \leftarrow C_i + 1$, and message reception updates $C_j \leftarrow \max(C_j, t_{\text{msg}}) + 1$.\par
+\labsub{1. Source Code Implementation (\texttt{lamport\_clocks.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_19_1.png}\\[4pt]
+  {\small\textit{Figure 19.1: Source Code Listing --- \texttt{lamport\_clocks.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_19_1.png}\\[4pt]
+  {\small\textit{Figure 19.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Every causal message chain strictly advances receiver logical clocks ($1 < 2 < 3 < 4 < 5$), preserving the happens-before partial order across independent nodes.\par
+\clearpage
+\labexp{19.2}{Distributed Mutual Exclusion: Ricart-Agrawala Algorithm (Lab 19.02)}
+\textbf{Aim:} To simulate the permission-based Ricart-Agrawala distributed mutual exclusion algorithm using Lamport timestamp tie-breaking.\par
+\textbf{Theoretical Principle:} Ricart-Agrawala requires a requesting node to broadcast \texttt{REQUEST(ts, id)} to all $N-1$ peers and collect $N-1$ \texttt{REPLY} grants before entering the Critical Section. Contending nodes order priority by $(ts, \text{node\_id})$, requiring $2(N-1)$ messages per CS entry and guaranteeing deadlock-free, starvation-free exclusion.\par
+\labsub{1. Source Code Implementation (\texttt{ricart\_agrawala.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_19_2.png}\\[4pt]
+  {\small\textit{Figure 19.3: Source Code Listing --- \texttt{ricart\_agrawala.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_19_2.png}\\[4pt]
+  {\small\textit{Figure 19.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} When Node-1 and Node-2 contend with identical timestamp 10, deterministic $(ts, \text{id})$ tie-breaking grants Node-1 immediate access while deferring Node-2 until Node-1 exits, preventing deadlock.\par
+\clearpage
+\labexp{19.3}{Leader Election in Distributed Systems: The Bully Algorithm (Lab 19.03)}
+\textbf{Aim:} To implement Garcia-Molina's Bully leader election algorithm following coordinator failure detection.\par
+\textbf{Theoretical Principle:} In the Bully Algorithm, every process has a unique rank ID. When a node detects that the highest-ID coordinator has crashed, it sends \texttt{ELECTION} messages to all higher-ID nodes. If any higher node replies \texttt{OK}, it takes over the election until the highest living node broadcasts \texttt{COORDINATOR} to the entire cluster.\par
+\labsub{1. Source Code Implementation (\texttt{bully\_election.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_19_3.png}\\[4pt]
+  {\small\textit{Figure 19.5: Source Code Listing --- \texttt{bully\_election.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_19_3.png}\\[4pt]
+  {\small\textit{Figure 19.6: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} After Coordinator Node-6 crashes, Node-3 initiates an election, Node-4 and Node-5 reply \texttt{OK}, and the highest surviving node (Node-5) converges cleanly as the new cluster coordinator.\par
+
+\chapter{The Linux System Architecture}
+\noindent\textit{Inspection of live process memory footprints, virtual address regions, CPU topology, and Linux kernel exponential moving average (EMA) load-average and context-switch modeling.}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{20.1}{Real-Time /proc Process Memory Map \& Status Monitor (Lab 20.01)}
+\textbf{Aim:} To inspect the live running process's PID, Resident Set Size (RSS), peak working set, and virtual memory statistics using native OS kernel interfaces.\par
+\textbf{Theoretical Principle:} Linux exposes live process descriptors and virtual memory area (VMA) tables through \texttt{/proc/self/status} and \texttt{/proc/self/maps}. On Windows hosts, the equivalent kernel counters are queried directly via the \texttt{psapi!GetProcessMemoryInfo} Win32 ABI, reporting real physical Resident Set Size (WorkingSetSize), Peak Working Set, and Pagefile commit.\par
+\labsub{1. Source Code Implementation (\texttt{proc\_mem\_monitor.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_20_1.png}\\[4pt]
+  {\small\textit{Figure 20.1: Source Code Listing --- \texttt{proc\_mem\_monitor.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_20_1.png}\\[4pt]
+  {\small\textit{Figure 20.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Querying live kernel memory counters directly yields the executing Python runtime's real resident working set, peak physical memory footprint, committed pagefile size, and page-fault count.\par
+\clearpage
+\labexp{20.2}{Linux Kernel Load Average \& Context Switch Analyzer (Lab 20.02)}
+\textbf{Aim:} To measure real thread context-switch throughput on the host CPU and compute Linux 1-minute, 5-minute, and 15-minute exponentially weighted load averages.\par
+\textbf{Theoretical Principle:} The Linux kernel updates load averages every 5 seconds using an exponentially damped moving average: $L_t = L_{t-1} \cdot e^{-\Delta t / T} + N_t \cdot (1 - e^{-\Delta t / T})$ for $T \in \{60, 300, 900\}\text{ s}$, where $N_t$ is the count of runnable plus uninterruptible tasks. Comparing load against logical core count reveals CPU saturation.\par
+\labsub{1. Source Code Implementation (\texttt{kernel\_load\_analyzer.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_20_2.png}\\[4pt]
+  {\small\textit{Figure 20.3: Source Code Listing --- \texttt{kernel\_load\_analyzer.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_20_2.png}\\[4pt]
+  {\small\textit{Figure 20.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The live ping-pong thread benchmark quantifies microsecond-scale scheduler switch overhead on the host CPU, while the Linux EMA model captures rapid 1-minute response versus smooth 15-minute damping.\par
+
+\chapter{Windows 10/11 Kernel Architecture}
+\noindent\textit{Architectural exploration of the Windows NT Executive (\texttt{EPROCESS}/\texttt{ETHREAD} objects, handle tables, and live Win32 kernel timing APIs) and NTFS Discretionary/System Access Control Lists (DACL/SACL).}\par\vspace{6pt}
+\noindent\textcolor{rulegray}{\rule{\textwidth}{0.5pt}}\vspace{6pt}
+\labexp{21.1}{Windows Executive Process \& Thread Object Architecture (Lab 21.01)}
+\textbf{Aim:} To inspect real Windows Executive process/thread identifiers and kernel/user CPU times via Win32 \texttt{kernel32.dll} APIs alongside an \texttt{EPROCESS}/\texttt{ETHREAD} handle-table model.\par
+\textbf{Theoretical Principle:} The Windows NT Executive manages processes and threads as kernel objects (\texttt{EPROCESS} and \texttt{ETHREAD}) governed by the Object Manager. Each process holds an isolated handle table referencing kernel objects, and the kernel tracks exact 100-nanosecond user-mode and kernel-mode execution intervals via \texttt{GetProcessTimes()}.\par
+\labsub{1. Source Code Implementation (\texttt{win\_executive\_objects.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_21_1.png}\\[4pt]
+  {\small\textit{Figure 21.1: Source Code Listing --- \texttt{win\_executive\_objects.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_21_1.png}\\[4pt]
+  {\small\textit{Figure 21.2: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} Direct \texttt{kernel32.dll} invocation extracts real active Windows PID, TID, kernel-mode, and user-mode execution intervals, paired with an \texttt{EPROCESS} handle-table representation for \texttt{joydev\_app.exe}.\par
+\clearpage
+\labexp{21.2}{Win32 File API \& Security Descriptor (DACL/SACL) Simulation (Lab 21.02)}
+\textbf{Aim:} To implement the Windows Security Reference Monitor (SRM) evaluation order for NTFS Security Descriptors (Owner SID, Deny-before-Allow DACL, and SACL audit trail).\par
+\textbf{Theoretical Principle:} Every securable Windows object carries a \texttt{SECURITY\_DESCRIPTOR} containing an Owner SID, a Discretionary Access Control List (DACL) of Access Control Entries (ACEs), and a System Access Control List (SACL) for security auditing. The Security Reference Monitor evaluates explicit \texttt{ACCESS\_DENIED} ACEs before \texttt{ACCESS\_ALLOWED} ACEs and defaults to implicit deny.\par
+\labsub{1. Source Code Implementation (\texttt{win32\_security\_acl.py})}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{images/code_21_2.png}\\[4pt]
+  {\small\textit{Figure 21.3: Source Code Listing --- \texttt{win32\_security\_acl.py} on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\labsub{2. Execution Verification Output}
+\noindent\begin{minipage}{\textwidth}\centering
+  \includegraphics[width=0.96\textwidth,height=0.37\textheight,keepaspectratio]{images/out_21_2.png}\\[4pt]
+  {\small\textit{Figure 21.4: Live Terminal Execution Output on \texttt{joydev@Joydev\_Barua}}}
+\end{minipage}\par\vspace{6pt}
+\textbf{Observation \& Inference:} The Security Reference Monitor enforces explicit Deny-before-Allow precedence, grants \texttt{SID\_JOYDEV\_25BTRCL298} read/write access while implicitly denying deletion, and triggers SACL audit entries on unauthorized writes and privileged deletions.\par
+
+\chapter{Laboratory Synthesis \& Core OS Invariants}
+Across Chapters 1 through 21, all 62 laboratory experiments were implemented, executed, and verified natively on \texttt{joydev@Joydev\_Barua}. Taken together, these implementations converge on six foundational operating systems invariants that govern modern kernels from embedded microkernels to cloud hypervisors.\par\vspace{8pt}
+\subsection*{1. Process Isolation \& Deterministic Scheduling (Chapters 1--5)}
+Kernel process boundaries, PID/PPID hierarchies, and IPC primitives isolate faults while enabling structured collaboration. CPU scheduling exposes an irreducible trade-off: SJF minimizes average waiting time ($\overline{W}$), whereas Round Robin trades context-switch overhead for bounded interactive responsiveness.\par
+\subsection*{2. Synchronization Correctness \& Deadlock Safety (Chapters 6--8)}
+Unsynchronized shared memory inevitably corrupts state under preemptive interleaving. Mutex locks, condition variables, and bounded semaphores restore mutual exclusion, while resource-ordering and Banker's safety checks mathematically eliminate circular-wait deadlocks before allocation.\par
+\subsection*{3. Memory Virtualization \& Locality Principles (Chapters 9--10)}
+Paging decouples logical address spaces from fragmented physical frames. Page replacement experiments demonstrate why stack algorithms (LRU, Optimal) are immune to Belady's Anomaly and why keeping aggregate working-set demand within physical frame capacity ($\sum WSS_i \le m$) prevents thrashing.\par
+\subsection*{4. Secondary Storage Throughput \& Crash Consistency (Chapters 11--15)}
+Elevator disk scheduling (SCAN/LOOK) and double-buffered DMA pipelines hide mechanical and I/O latencies. Above block devices, LRU buffer caches accelerate hot reads while Write-Ahead Logging (journaling) guarantees atomic recovery across sudden power loss.\par
+\subsection*{5. Defense-in-Depth Protection \& Cryptographic Trust (Chapters 16--17, 21)}
+Security combines per-user salted key derivation (PBKDF2-HMAC-SHA256), least-privilege RBAC policies, Lampson protection domains, HMAC-sealed capabilities, and explicit Deny-before-Allow DACL/SACL enforcement inside the kernel Security Reference Monitor.\par
+\subsection*{6. Hardware Virtualization \& Distributed Coordination (Chapters 18--20)}
+Two-level EPT address translation and memory ballooning extend OS abstraction to entire virtual machines, while Lamport clocks, Ricart-Agrawala mutual exclusion, and the Bully election protocol establish consistent global order and leadership without shared physical memory or clocks.\par
+\vspace{10pt}\subsection*{Laboratory Verification Summary (Chapters 1--21)}
+\begin{center}
+\small
+\begin{tabular}{@{}clcc@{}}
+\toprule
+\textbf{Ch.} & \textbf{Chapter Title} & \textbf{Experiments} & \textbf{Status} \\
+\midrule
+1 & Introduction to Operating Systems \& UNIX Fundamentals & 7 & Verified (Pass) \\
+2 & Operating-System Structures \& System Call Interfaces & 2 & Verified (Pass) \\
+3 & Processes \& Inter-Process Communication (IPC) & 9 & Verified (Pass) \\
+4 & Threads \& Concurrency & 4 & Verified (Pass) \\
+5 & CPU Scheduling Algorithms & 2 & Verified (Pass) \\
+6 & Synchronization Tools \& Hardware Primitives & 1 & Verified (Pass) \\
+7 & Classic Synchronization Examples & 3 & Verified (Pass) \\
+8 & Deadlocks: Prevention, Avoidance \& Detection & 3 & Verified (Pass) \\
+9 & Main Memory Management & 3 & Verified (Pass) \\
+10 & Virtual Memory \& Page Replacement & 5 & Verified (Pass) \\
+11 & Mass-Storage Structure \& Disk Scheduling & 2 & Verified (Pass) \\
+12 & I/O Systems \& Device Management & 2 & Verified (Pass) \\
+13 & File-System Interface & 2 & Verified (Pass) \\
+14 & File-System Implementation & 2 & Verified (Pass) \\
+15 & File-System Internals \& Reliability & 2 & Verified (Pass) \\
+16 & Security: Authentication \& Access Control & 2 & Verified (Pass) \\
+17 & Protection: Access Matrix \& Capability Systems & 2 & Verified (Pass) \\
+18 & Virtual Machines \& Hypervisors & 2 & Verified (Pass) \\
+19 & Distributed Systems \& Synchronization & 3 & Verified (Pass) \\
+20 & The Linux System Architecture & 2 & Verified (Pass) \\
+21 & Windows 10/11 Kernel Architecture & 2 & Verified (Pass) \\
+\midrule
+\textbf{Total} & \textbf{Complete Operating Systems Laboratory Curriculum} & \textbf{62} & \textbf{100\% Verified} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{12pt}
+\begin{center}
+\textcolor{rulegray}{\rule{0.6\textwidth}{0.6pt}}\\[4pt]
+{\small\textit{End of Operating Systems Laboratory Record --- Joydev Barua (25BTRCL298)}}
+\end{center}
+\end{document}

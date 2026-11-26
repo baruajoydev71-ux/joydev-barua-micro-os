@@ -1,6 +1,19 @@
 # Joydev Micro-OS: Educational Rust Micro-Kernel & Metro Ash Desktop
-### CA-6 Flagship Engineering Assessment | Operating Systems (15 Marks)
-**Student Name:** Joydev Barua | **Repository:** [joydev-barua-micro-os](https://github.com/baruajoydev71-ux/joydev-barua-micro-os)
+### Operating Systems (25PCCS201) — Complete Course Portfolio (CA-1 to CA-6 & Laboratory Record)
+**Student Name:** Joydev Barua | **USN:** `25BTRCL298` | **Repository:** [joydev-barua-micro-os](https://github.com/baruajoydev71-ux/joydev-barua-micro-os) | **Live Hugging Face Space:** [joy97668/joydev-barua-micro-os](https://huggingface.co/spaces/joy97668/joydev-barua-micro-os)
+
+## Course Portfolio Index (25PCCS201)
+
+| Component | Description | Location |
+|---|---|---|
+| **CA-1** | Multi-Core Scheduling Research Activity (Processor Affinity & Workload Distribution) | [`assessments/CA-1/Joydev_Barua_25BTRCL298_CA1_Multi_Core_Scheduling_Research.pdf`](assessments/CA-1/Joydev_Barua_25BTRCL298_CA1_Multi_Core_Scheduling_Research.pdf) |
+| **CA-2** | Multi-Core Scheduling Performance Investigation Report | [`assessments/CA-2/Joydev_Barua_25BTRCL298_CA2_Performance_Investigation.pdf`](assessments/CA-2/Joydev_Barua_25BTRCL298_CA2_Performance_Investigation.pdf) |
+| **CA-3** | Multi-Core Scheduling Design & Debugging Challenge | [`assessments/CA-3/Joydev_Barua_25BTRCL298_CA3_Design_Debugging.pdf`](assessments/CA-3/Joydev_Barua_25BTRCL298_CA3_Design_Debugging.pdf) |
+| **CA-5** | Linux Systems Engineering Challenge (Multi-Core Scheduling) | [`assessments/CA-5/Joydev_Barua_25BTRCL298_CA5_Linux_Systems_Engineering.pdf`](assessments/CA-5/Joydev_Barua_25BTRCL298_CA5_Linux_Systems_Engineering.pdf) |
+| **CA-6** | Joydev Micro-OS (Rust Microkernel, Metro Ash Desktop, VirtualBox ISOs & Docs) | [`src/`](src/), [`desktop/`](desktop/), [`virtualbox/`](virtualbox/), [`docs/`](docs/), [`assessments/CA-6_Scheduler_Companion/`](assessments/CA-6_Scheduler_Companion/) |
+| **OS Lab Record** | Complete 102-Page Operating Systems Laboratory Record (Chapters 1–22, 62 Verified Experiments + LaTeX & Code) | [`os-lab-record/Joydev_Barua_25BTRCL298_OS_Lab_Record.pdf`](os-lab-record/Joydev_Barua_25BTRCL298_OS_Lab_Record.pdf) & [`os-lab-record/os_lab/`](os-lab-record/os_lab/) |
+
+---
 
 > **Central Question**: *Can students move beyond using an operating system to designing and implementing selected operating-system mechanisms themselves?*
 
